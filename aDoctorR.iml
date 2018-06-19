@@ -9,6 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="org.eclipse.jdt:org.eclipse.jdt.core:3.13.101" level="project" />
     <orderEntry type="library" name="aDoctorPlugin" level="project" />
   </component>
 </module>
