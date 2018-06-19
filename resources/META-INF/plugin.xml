@@ -1,16 +1,16 @@
 <idea-plugin>
   <id>com.your.company.unique.plugin.id</id>
-  <name>Plugin display name here</name>
+  <name>aDoctor-R</name>
   <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+  <vendor email="emaiannone@hotmail.it">Unisa</vendor>
 
   <description><![CDATA[
-      Enter short description for your plugin here.<br>
+      E' un plugin bello.<br>
       <em>most HTML tags may be used</em>
     ]]></description>
 
   <change-notes><![CDATA[
-      Add change notes here.<br>
+      Nessuna modifica.<br>
       <em>most HTML tags may be used</em>
     ]]>
   </change-notes>
