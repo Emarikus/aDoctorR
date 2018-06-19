@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="aDoctorPlugin">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Desktop/aDoctorPlugin/lib/aDoctorPlugin.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
