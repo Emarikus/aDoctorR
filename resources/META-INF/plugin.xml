@@ -1,17 +1,15 @@
 <idea-plugin>
-  <id>com.your.company.unique.plugin.id</id>
+  <id>it.unisa.plugin.adoctorr</id>
   <name>aDoctor-R</name>
   <version>1.0</version>
-  <vendor email="emaiannone@hotmail.it">Unisa</vendor>
+  <vendor email="emaiannone@hotmail.it">Emanuele Iannone</vendor>
 
   <description><![CDATA[
-      E' un plugin bello.<br>
-      <em>most HTML tags may be used</em>
+      Plugin per refactoring di energy smell per Android.
     ]]></description>
 
   <change-notes><![CDATA[
-      Nessuna modifica.<br>
-      <em>most HTML tags may be used</em>
+      NA
     ]]>
   </change-notes>
 
@@ -30,6 +28,10 @@
 
   <actions>
     <!-- Add your actions here -->
+      <action id="start_action" class="adoctorr.presentation.action.StartAction" text="aDoctor-R"
+              description="Run the aDoctor-R plugin">
+          <add-to-group group-id="AnalyzeMenu" anchor="last"/>
+      </action>
   </actions>
 
 </idea-plugin>
