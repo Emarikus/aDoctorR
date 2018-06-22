@@ -1,6 +1,8 @@
 package adoctorr.application.analysis;
 
 import adoctorr.application.smell.SmellMethodBean;
+import beans.ClassBean;
+import beans.MethodBean;
 import beans.PackageBean;
 import com.intellij.openapi.project.Project;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -27,7 +29,7 @@ public class Analyzer {
      * @param project
      * @return
      */
-    public ArrayList<PackageBean> buildPackageList(Project project) {
+    public ArrayList<PackageBean> buildPackageList(Project project) throws IOException {
         ArrayList<PackageBean> packageList = null;
         // Precondition check
         if (project != null) {
@@ -35,11 +37,15 @@ public class Analyzer {
             if (projectBasePath != null) {
                 // PackageList to be filled
                 File projectDirectory = new File(project.getBasePath());
-                try {
-                    // Calling the aDoctor legacy method to build this list
-                    packageList = FolderToJavaProjectConverter.convert(projectDirectory.getAbsolutePath());
-                } catch (IOException e) {
-                    e.printStackTrace();
+                // Calling the aDoctor legacy method to build this list
+                packageList = FolderToJavaProjectConverter.convert(projectDirectory.getAbsolutePath());
+                // belongingClass was not set in aDoctor API: this is just a fix
+                for (PackageBean packageBean : packageList) {
+                    for (ClassBean classBean : packageBean.getClasses()) {
+                        for (MethodBean methodBean : classBean.getMethods()) {
+                            methodBean.setBelongingClass(classBean);
+                        }
+                    }
                 }
             }
         }
@@ -48,6 +54,7 @@ public class Analyzer {
 
     /**
      * Obtains all project Java files
+     *
      * @param project
      * @return
      */
@@ -67,31 +74,28 @@ public class Analyzer {
 
     /**
      * Builds a HashMap that given a class FQN it is possible to get the related java File.
+     *
      * @param javaFilesList
      * @return
      */
-    public HashMap<String, File> buildSourceFileMap(ArrayList<File> javaFilesList) {
+    public HashMap<String, File> buildSourceFileMap(ArrayList<File> javaFilesList) throws IOException {
         HashMap<String, File> sourceFileMap = null;
         // Precondition check
         if (javaFilesList != null && javaFilesList.size() > 0) {
             sourceFileMap = new HashMap<>();
-            try {
-                for (File javaFile : javaFilesList) {
-                    // Creates the CompilationUnit of every Java file in order to get its FQN easily. This is done through CodeParser of aDoctor
-                    CodeParser codeParser = new CodeParser();
-                    CompilationUnit compilationUnit = codeParser.createParser(FileUtilities.readFile(javaFile.getAbsolutePath()));
+            for (File javaFile : javaFilesList) {
+                // Creates the CompilationUnit of every Java file in order to get its FQN easily. This is done through CodeParser of aDoctor
+                CodeParser codeParser = new CodeParser();
+                String javaFileContent = FileUtilities.readFile(javaFile.getAbsolutePath());
+                CompilationUnit compilationUnit = codeParser.createParser(javaFileContent);
 
-                    // Builds the FQN String
-                    String packageName = compilationUnit.getPackage().getName().getFullyQualifiedName();
-                    TypeDeclaration typeDeclaration = (TypeDeclaration) compilationUnit.types().get(0);
-                    String className = typeDeclaration.getName().toString();
-                    String classFullName = packageName + "." + className;
+                // Builds the FQN String
+                String packageName = compilationUnit.getPackage().getName().getFullyQualifiedName();
+                TypeDeclaration typeDeclaration = (TypeDeclaration) compilationUnit.types().get(0);
+                String className = typeDeclaration.getName().toString();
+                String classFullName = packageName + "." + className;
 
-                    sourceFileMap.put(classFullName, javaFile);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                sourceFileMap = null;
+                sourceFileMap.put(classFullName, javaFile);
             }
         }
         return sourceFileMap;
@@ -99,15 +103,53 @@ public class Analyzer {
 
     /**
      * Builds an ArrayList with all code smell found in the whole project
+     *
      * @param packageList
      * @param sourceFileMap
      * @return
      */
-    public ArrayList<SmellMethodBean> analyze(ArrayList<PackageBean> packageList, HashMap<String, File> sourceFileMap) {
-        ArrayList<SmellMethodBean>  smellMethodList = null;
+    public ArrayList<SmellMethodBean> analyze(ArrayList<PackageBean> packageList, HashMap<String, File> sourceFileMap) throws IOException {
+        ArrayList<SmellMethodBean> smellMethodList = new ArrayList<>();
 
-        //TODO 0: Chiama tutti i vari analyzer per cercare gli smell e popolare la lista
+        ArrayList<SmellMethodBean> durableWakelockList = null;
+        ArrayList<SmellMethodBean> dataTransmissionWithoutComrpessionList = null;
+        ArrayList<SmellMethodBean> prohibitedDataTransferList = null;
+        ArrayList<SmellMethodBean> bulkDataTransferOnSlowNetworkList = null;
+        ArrayList<SmellMethodBean> earlyResourceBindingList = null;
+        ArrayList<SmellMethodBean> rigidAlarmManagerList = null;
 
+        DurableWakelockAnalyzer durableWakelockAnalyzer = new DurableWakelockAnalyzer();
+        DataTransmissionWithoutCompressionAnalyzer dataTransmissionWithoutCompressionAnalyzer = new DataTransmissionWithoutCompressionAnalyzer();
+        ProhibitedDataTransferAnalyzer prohibitedDataTransferAnalyzer = new ProhibitedDataTransferAnalyzer();
+        BulkDataTransferOnSlowNetworkAnalyzer bulkDataTransferOnSlowNetworkAnalyzer = new BulkDataTransferOnSlowNetworkAnalyzer();
+        EarlyResourceBindingAnalyzer earlyResourceBindingAnalyzer = new EarlyResourceBindingAnalyzer();
+        RigidAlarmManagerAnalyzer rigidAlarmManagerAnalyzer = new RigidAlarmManagerAnalyzer();
+
+        durableWakelockList = durableWakelockAnalyzer.analyze(packageList, sourceFileMap);
+        dataTransmissionWithoutComrpessionList = dataTransmissionWithoutCompressionAnalyzer.analyze(packageList, sourceFileMap);
+        prohibitedDataTransferList = prohibitedDataTransferAnalyzer.analyze(packageList, sourceFileMap);
+        bulkDataTransferOnSlowNetworkList = bulkDataTransferOnSlowNetworkAnalyzer.analyze(packageList, sourceFileMap);
+        earlyResourceBindingList = earlyResourceBindingAnalyzer.analyze(packageList, sourceFileMap);
+        rigidAlarmManagerList = rigidAlarmManagerAnalyzer.analyze(packageList, sourceFileMap);
+
+        if (durableWakelockList != null) {
+            smellMethodList.addAll(durableWakelockList);
+        }
+        if (dataTransmissionWithoutComrpessionList != null) {
+            smellMethodList.addAll(dataTransmissionWithoutComrpessionList);
+        }
+        if (prohibitedDataTransferList != null) {
+            smellMethodList.addAll(prohibitedDataTransferList);
+        }
+        if (bulkDataTransferOnSlowNetworkList != null) {
+            smellMethodList.addAll(bulkDataTransferOnSlowNetworkList);
+        }
+        if (earlyResourceBindingList != null) {
+            smellMethodList.addAll(earlyResourceBindingList);
+        }
+        if (rigidAlarmManagerList != null) {
+            smellMethodList.addAll(rigidAlarmManagerList);
+        }
         return smellMethodList;
     }
 
@@ -138,30 +180,3 @@ public class Analyzer {
         return javaFilesList;
     }
 }
-    /*
-
-                            //4) Analisi Bean alla ricerca degli Smell
-                            System.out.println("Ricerca dei Code Smell...");
-
-                            MemberIgnoringMethodResolver mimResolver = new MemberIgnoringMethodResolver();
-                            DataTransmissionWithoutCompressionResolver dataResolver = new DataTransmissionWithoutCompressionResolver();
-                            DurableWakeLockResolver wakeLockResolver = new DurableWakeLockResolver();
-                            //TODO: Istanziare gli altri Resolver
-
-                            ArrayList<MethodBean> mimList = mimResolver.analyze(packageList, sourceFileMap);
-                            ArrayList<MethodBean> bulkList = new ArrayList<>(); //TODO: DEBUG
-                            ArrayList<MethodBean> dataList = dataResolver.analyze(packageList, sourceFileMap);
-                            ArrayList<MethodBean> wakeLockList = wakeLockResolver.analyze(packageList, sourceFileMap);
-                            ArrayList<MethodBean> earlyList = new ArrayList<>(); //TODO: DEBUG
-                            ArrayList<MethodBean> prohibitedList = new ArrayList<>(); //TODO: DEBUG
-                            ArrayList<MethodBean> rigidList = new ArrayList<>(); //TODO: DEBUG
-                            smellMatrix.add(mimList);
-                            smellMatrix.add(bulkList);
-                            smellMatrix.add(dataList);
-                            smellMatrix.add(wakeLockList);
-                            smellMatrix.add(earlyList);
-                            smellMatrix.add(prohibitedList);
-                            smellMatrix.add(rigidList);
-
-                            System.out.println("Ricerca dei Code Smell terminata con successo");
-                    */

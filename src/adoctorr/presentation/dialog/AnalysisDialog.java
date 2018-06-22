@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -41,31 +42,49 @@ public class AnalysisDialog extends JDialog {
         analysisDialog.pack();
         analysisDialog.setVisible(true);
 
-        //TODO 1: Call Analyzer methods sending it the project object. Takes the various results and then it calls the SmellDialog
         Analyzer analyzer = new Analyzer();
-        ArrayList<PackageBean> projectPackageList = analyzer.buildPackageList(project);
-        // Postcondition check
-        if (projectPackageList == null) {
-            //TODO 2: Handle error
-        } else {
-            ArrayList<File> javaFilesList = analyzer.getAllJavaFiles(project);
-            // Postcondition check
-            if (javaFilesList == null) {
-                //TODO 3: Handle error
-            } else {
-                HashMap<String, File> sourceFileMap = analyzer.buildSourceFileMap(javaFilesList);
+        ArrayList<PackageBean> projectPackageList;
+        try {
+            projectPackageList = analyzer.buildPackageList(project);
+            // Post condition check
+            if (projectPackageList != null) {
+                ArrayList<File> javaFilesList = analyzer.getAllJavaFiles(project);
                 // Postcondition check
-                if (sourceFileMap == null) {
-                    //TODO 4: Handle error
-                } else {
-                    ArrayList<SmellMethodBean> smellMethodList = analyzer.analyze(projectPackageList, sourceFileMap);
-                    if (sourceFileMap == null) {
-                        //TODO 5: Handle error
-                    } else {
-                        //TODO 0: Show next dialog sending it the smellMethodList
+                if (javaFilesList != null) {
+                    HashMap<String, File> sourceFileMap;
+                    try {
+                        sourceFileMap = analyzer.buildSourceFileMap(javaFilesList);
+                        // Postcondition check
+                        if (sourceFileMap != null) {
+                            ArrayList<SmellMethodBean> smellMethodList = null;
+                            try {
+                                smellMethodList = analyzer.analyze(projectPackageList, sourceFileMap);
+                                // Postocondition check
+                                if (smellMethodList != null) {
+                                    SmellDialog.show(project, smellMethodList, projectPackageList, sourceFileMap);
+                                } else {
+                                    //TODO Error handle 4: smellMethodList ritornata vuota
+                                }
+                            } catch (IOException e3) {
+                                //TODO Error handle 4: errore nella costruzione della smellMethodList. E' comunque vuota
+                                e3.printStackTrace();
+                            }
+                        } else {
+                            //TODO Error handle 3: sourceFileMap ritornata vuota
+                        }
+                    } catch (IOException e2) {
+                        //TODO Error handle 3: errore nella costruzione della sourceFileMap. E' comunque vuota
+                        e2.printStackTrace();
                     }
+                } else {
+                    //TODO Error handle 2: javaFileList ritornata vuota
                 }
+            } else {
+                //TODO Error handle 1: packageList ritornata vuota
             }
+        } catch (IOException e1) {
+            //TODO Error handle 1: errore nella costruzione della packageList. E' comunque vuota
+            e1.printStackTrace();
         }
     }
 }
