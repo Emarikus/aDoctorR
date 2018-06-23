@@ -106,14 +106,19 @@
       </grid>
       <scrollpane id="670d7" binding="smellListPane">
         <constraints>
-          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+            <preferred-size width="192" height="-1"/>
+          </grid>
         </constraints>
         <properties/>
         <border type="none"/>
         <children>
           <component id="29d3e" class="javax.swing.JList" binding="listSmell">
             <constraints/>
-            <properties/>
+            <properties>
+              <model/>
+              <selectionMode value="0"/>
+            </properties>
           </component>
         </children>
       </scrollpane>

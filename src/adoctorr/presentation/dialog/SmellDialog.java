@@ -22,7 +22,7 @@ public class SmellDialog extends JDialog {
     private JScrollPane actualCodePane;
     private JScrollPane proposedCodePane;
 
-    private JList listSmell;
+    private JList<String> listSmell;
 
     private JLabel labelSmellName;
 
@@ -44,12 +44,21 @@ public class SmellDialog extends JDialog {
         this.projectPackageList = projectPackageList;
         this.sourceFileMap = sourceFileMap;
 
-        //TODO: Initialize JList con smellMethodList e vede come viene
 
-        //TODO: Listener del click di un elemento della JList con:
-        //TODO: aggiornamento delle varie label, aggiornamtno actualCode, calcolo proposta e aggiormanento proposedCode
+        //TODO (priorità bassa): Migliorare l'estetica, sebbene funzioni
+        DefaultListModel<String> listSmellModel = (DefaultListModel<String>) listSmell.getModel();
+        for (SmellMethodBean smellMethodBean : smellMethodList) {
+            String methodName = smellMethodBean.getMethodBean().getName();
+            int smellType = smellMethodBean.getSmellType();
+            String smellName = SmellMethodBean.getSmellName(smellType);
 
-        //TODO: Selezione di default già del primo elemento della JList
+            listSmellModel.addElement(smellName + "\n\t " + methodName);
+        }
+
+        //TODO (priorità altissima): Listener del click di un elemento della JList con:
+        //TODO (priorità alta): aggiornamento delle varie label, aggiornamtno actualCode, calcolo proposta e aggiormanento proposedCode
+
+        //TODO (priorità medio-alta): Selezione di default già del primo elemento della JList
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);

@@ -43,6 +43,12 @@ public class DurableWakelockAnalyzer extends SmellAnalyzer {
                     if (methodDeclaration != null) {
                         // TODO: Analizza il methodDeclaration e il methodBean per cercare lo smell, quando ne trova uno
                             //TODO: costruisce lo SmellMethodBean e lo aggiunge alla smellList
+
+                        SmellMethodBean smellMethodBean = new SmellMethodBean();
+                        smellMethodBean.setMethodBean(methodBean);
+                        smellMethodBean.setSmellType(SmellMethodBean.DURABLE_WAKELOCK);
+                        smellMethodBean.setResolved(false);
+                        smellList.add(smellMethodBean);
                     }
                 }
             }

@@ -17,6 +17,18 @@ public class SmellMethodBean {
     public SmellMethodBean() {
     }
 
+    public static String getSmellName(int smellType) {
+        switch (smellType) {
+            case DURABLE_WAKELOCK: return "Durable Wakelock";
+            case DATA_TRANSMISSION_WITHOUT_COMPRESSION: return "Data Transmission Without Compression";
+            case PROHIBITED_DATA_TRANSFER: return "Prohibited Data Transfer";
+            case BULK_DATA_TRANSFR_ON_SLOW_NETWORK: return "Bulk Data Transfer On Slow Network";
+            case EARLY_RESOURCE_BINDING: return "Early Resource Binding";
+            case RIGID_ALARM_MANAGER: return "Rigid Alarm Manager";
+            default: return null;
+        }
+    }
+
     public MethodBean getMethodBean() {
         return methodBean;
     }
