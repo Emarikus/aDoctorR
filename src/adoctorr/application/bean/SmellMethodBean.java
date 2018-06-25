@@ -1,6 +1,8 @@
-package adoctorr.application.smell;
+package adoctorr.application.bean;
 
 import beans.MethodBean;
+
+import java.io.File;
 
 public class SmellMethodBean {
     public static final int DURABLE_WAKELOCK = 1;
@@ -13,6 +15,7 @@ public class SmellMethodBean {
     private MethodBean methodBean;
     private int smellType;
     private boolean resolved;
+    private File sourceFile;
 
     public SmellMethodBean() {
     }
@@ -51,5 +54,13 @@ public class SmellMethodBean {
 
     public void setResolved(boolean resolved) {
         this.resolved = resolved;
+    }
+
+    public File getSourceFile() {
+        return sourceFile;
+    }
+
+    public void setSourceFile(File sourceFile) {
+        this.sourceFile = sourceFile;
     }
 }

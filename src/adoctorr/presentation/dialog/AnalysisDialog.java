@@ -1,7 +1,7 @@
 package adoctorr.presentation.dialog;
 
 import adoctorr.application.analysis.Analyzer;
-import adoctorr.application.smell.SmellMethodBean;
+import adoctorr.application.bean.SmellMethodBean;
 import beans.PackageBean;
 import com.intellij.openapi.project.Project;
 
@@ -95,11 +95,11 @@ public class AnalysisDialog extends JDialog {
                                 ArrayList<SmellMethodBean> smellMethodList = null;
                                 try {
                                     smellMethodList = analyzer.analyze(projectPackageList, sourceFileMap);
+                                    // Hides the analysis window, unlocking the thread blocked at the preceding setVisible(true)
+                                    analysisDialog.setVisible(false);
                                     // Postocondition check
-                                    if (smellMethodList != null) {
+                                    if (smellMethodList != null && smellMethodList.size()>0) {
                                         System.out.println("smellMethodList costruita");
-                                        // Hides the analysis wiindow, unlocking the thread blocked at the preceiding setVisible(true)
-                                        analysisDialog.setVisible(false);
                                         SmellDialog.show(project, smellMethodList, projectPackageList, sourceFileMap);
                                     } else {
                                         //TODO Error handle 4: smellMethodList ritornata vuota

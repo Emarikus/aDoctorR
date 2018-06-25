@@ -1,6 +1,6 @@
 package adoctorr.application.analysis;
 
-import adoctorr.application.smell.SmellMethodBean;
+import adoctorr.application.bean.SmellMethodBean;
 import beans.ClassBean;
 import beans.MethodBean;
 import beans.PackageBean;
@@ -102,7 +102,8 @@ public class Analyzer {
     }
 
     /**
-     * Builds an ArrayList with all code smell found in the whole project
+     * Builds an ArrayList with all code bean found in the whole project
+     * returns null iff there are no smells
      *
      * @param packageList
      * @param sourceFileMap
@@ -150,7 +151,12 @@ public class Analyzer {
         if (rigidAlarmManagerList != null) {
             smellMethodList.addAll(rigidAlarmManagerList);
         }
-        return smellMethodList;
+
+        if (smellMethodList.size() > 0) {
+            return smellMethodList;
+        } else {
+            return null;
+        }
     }
 
     /**

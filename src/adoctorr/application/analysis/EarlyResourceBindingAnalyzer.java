@@ -1,6 +1,7 @@
 package adoctorr.application.analysis;
 
-import adoctorr.application.smell.SmellMethodBean;
+import adoctorr.application.ASTUtilities;
+import adoctorr.application.bean.SmellMethodBean;
 import beans.ClassBean;
 import beans.MethodBean;
 import beans.PackageBean;
@@ -14,7 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class EarlyResourceBindingAnalyzer extends SmellAnalyzer {
+public class EarlyResourceBindingAnalyzer {
 
     /**
      * @param packageList
@@ -32,15 +33,13 @@ public class EarlyResourceBindingAnalyzer extends SmellAnalyzer {
                 String classFullName = packageName + "." + className;
                 File sourceFile = sourceFileMap.get(classFullName);
 
-                CodeParser codeParser = new CodeParser();
-                String javaFileContent = FileUtilities.readFile(sourceFile.getAbsolutePath());
-                CompilationUnit compilationUnit = codeParser.createParser(javaFileContent);
+                CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
                 for (MethodBean methodBean : classBean.getMethods()) {
-                    MethodDeclaration methodDeclaration = getNodeFromBean(methodBean, compilationUnit);
+                    MethodDeclaration methodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
 
                     // Warning: Source code with accents might give problems in the methodDeclaration fetch
                     if (methodDeclaration != null) {
-                        // TODO: Analizza il methodDeclaration e il methodBean per cercare lo smell, quando ne trova uno
+                        // TODO: Analizza il methodDeclaration e il methodBean per cercare lo bean, quando ne trova uno
                         //TODO: costruisce lo SmellMethodBean e lo aggiunge alla smellList
                     }
                 }
