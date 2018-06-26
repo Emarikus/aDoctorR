@@ -17,7 +17,12 @@ public class AnalysisDialog extends JDialog {
     private JPanel contentPane;
     private JPanel infoPane;
 
+    private AnalysisThread analysisThread;
+
     private Project project;
+    private ArrayList<SmellMethodBean> smellMethodList;
+    private ArrayList<PackageBean> projectPackageList;
+    private HashMap<String, File> sourceFileMap;
 
     /**
      * Default constructor and initializator of the dialog
@@ -30,6 +35,9 @@ public class AnalysisDialog extends JDialog {
         setModal(true);
 
         this.project = project;
+        projectPackageList = null;
+        sourceFileMap = null;
+        smellMethodList = null;
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -49,18 +57,28 @@ public class AnalysisDialog extends JDialog {
         AnalysisDialog analysisDialog = new AnalysisDialog(project);
 
         // Thread that manage the real analysis
-        AnalysisThread thread = new AnalysisThread(project, analysisDialog);
-        thread.start();
+        analysisDialog.analysisThread = new AnalysisThread(project, analysisDialog);
+        analysisDialog.analysisThread.start();
 
-        // Leave them as they are
+        // Leave it as it is
         analysisDialog.pack();
+
         // setVisibile(true) is blocking, that's why we use a Thread to start the real analysis
         analysisDialog.setVisible(true);
+
+        // Invoked at the end of the analysis block
+        analysisDialog.showSmellDialog();
     }
 
     private void onExit() {
-        // TODO: Mettere un are you sure to abort? Se si, stoppare tutta l'esecuzione
+        //TODO: Mettere in pausa il thread e se si, si stoppa tutto, altrimenti si riprende il thread
         dispose();
+    }
+
+    private void showSmellDialog() {
+        if (smellMethodList != null) {
+            SmellDialog.show(project, smellMethodList, projectPackageList, sourceFileMap);
+        }
     }
 
     private static class AnalysisThread extends Thread {
@@ -95,15 +113,21 @@ public class AnalysisDialog extends JDialog {
                                 ArrayList<SmellMethodBean> smellMethodList = null;
                                 try {
                                     smellMethodList = analyzer.analyze(projectPackageList, sourceFileMap);
-                                    // Hides the analysis window, unlocking the thread blocked at the preceding setVisible(true)
-                                    analysisDialog.setVisible(false);
                                     // Postocondition check
-                                    if (smellMethodList != null && smellMethodList.size()>0) {
+                                    if (smellMethodList != null && smellMethodList.size() > 0) {
                                         System.out.println("smellMethodList costruita");
-                                        SmellDialog.show(project, smellMethodList, projectPackageList, sourceFileMap);
                                     } else {
+                                        smellMethodList = null;
                                         //TODO Error handle 4: smellMethodList ritornata vuota
                                     }
+
+                                    // Set all the results to the analysisDialog in a callback-like style
+                                    analysisDialog.projectPackageList = projectPackageList;
+                                    analysisDialog.sourceFileMap = sourceFileMap;
+                                    analysisDialog.smellMethodList = smellMethodList;
+
+                                    // Hides the analysis window, unlocking the thread blocked at the preceding setVisible(true)
+                                    analysisDialog.setVisible(false);
                                 } catch (IOException e3) {
                                     //TODO Error handle 4: errore nella costruzione della smellMethodList. E' comunque vuota
                                     e3.printStackTrace();

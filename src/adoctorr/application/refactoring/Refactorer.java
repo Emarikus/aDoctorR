@@ -60,7 +60,7 @@ public class Refactorer {
                 System.out.println("---Documento Rifattorizzato---");
                 System.out.println(documentContent);
                 //TODO: Le edits non presentano gli \n. Come si risolve?
-
+                //TODO: Slow method, dare avviso all'utente
                 // Overwrite directly the file
                 PrintWriter pw = new PrintWriter(new FileOutputStream(sourceFile, false));
                 pw.println(documentContent);

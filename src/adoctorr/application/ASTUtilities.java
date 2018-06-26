@@ -60,7 +60,6 @@ public class ASTUtilities {
     public static CompilationUnit getCompilationUnit(File sourceFile) throws IOException {
         CodeParser codeParser = new CodeParser();
         String javaFileContent = FileUtilities.readFile(sourceFile.getAbsolutePath());
-        CompilationUnit compilationUnit = codeParser.createParser(javaFileContent);
-        return compilationUnit;
+        return codeParser.createParser(javaFileContent);
     }
 }

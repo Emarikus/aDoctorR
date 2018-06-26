@@ -1,64 +1,30 @@
 package adoctorr.application.analysis;
 
 import adoctorr.application.ASTUtilities;
+import adoctorr.application.bean.DurableWakelockSmellMethodBean;
 import adoctorr.application.bean.SmellMethodBean;
-import beans.ClassBean;
 import beans.MethodBean;
-import beans.PackageBean;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DurableWakelockAnalyzer {
 
-    /**
-     * @param packageList
-     * @param sourceFileMap
-     * @return
-     * @throws IOException
-     */
     // Warning: Source code with method-level compile error and accents might give problems in the methodDeclaration fetch
-    public ArrayList<SmellMethodBean> analyze(ArrayList<PackageBean> packageList, HashMap<String, File> sourceFileMap) throws IOException {
-        ArrayList<SmellMethodBean> smellList = new ArrayList<>();
-        for (PackageBean packageBean : packageList) {
-            for (ClassBean classBean : packageBean.getClasses()) {
-                String className = classBean.getName();
-                String packageName = packageBean.getName();
-                String classFullName = packageName + "." + className;
-                File sourceFile = sourceFileMap.get(classFullName);
-
-                CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-                for (MethodBean methodBean : classBean.getMethods()) {
-                    MethodDeclaration methodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
-                    if (analyzeMethod(methodDeclaration)) {
-                        //TODO: Costruire un DurableWakelockSmellMethodBean: da costruire.
-                        SmellMethodBean smellMethodBean = new SmellMethodBean();
-                        smellMethodBean.setMethodBean(methodBean);
-                        smellMethodBean.setResolved(false);
-                        smellMethodBean.setSourceFile(sourceFile);
-                        smellMethodBean.setSmellType(SmellMethodBean.DURABLE_WAKELOCK);
-                        smellList.add(smellMethodBean);
-                    }
-                }
-            }
-        }
-        return smellList;
-    }
-
-    private boolean analyzeMethod(MethodDeclaration methodDeclaration) {
-        if (methodDeclaration == null) {
-            return false;
+    public DurableWakelockSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, File sourceFile) {
+        if (methodBean == null) {
+            return null;
+        } else if (methodDeclaration == null) {
+            return null;
+        } else if (sourceFile == null) {
+            return null;
         } else {
             String wakelockName = "";
-            // Works, but it could be improved through MethodInvocation instead of String regex
             String methodContent = methodDeclaration.toString();
-            // Regex to get all the wl.acquire()
+            // Regex to get all the acquire()
             Pattern acquireRegex = Pattern.compile("(.*)acquire(\\s*)\\(\\)", Pattern.MULTILINE);
             Matcher acquireMatcher = acquireRegex.matcher(methodContent);
 
@@ -87,7 +53,20 @@ public class DurableWakelockAnalyzer {
                     smellFound = !foundAfter;
                 }
             }
-            return smellFound;
+            if (smellFound) {
+                String acquireString = wakelockName + ".acquire()";
+                MethodInvocation acquireMethodInvocation = ASTUtilities.getNodeFromInvocationName(methodDeclaration, acquireString);
+
+                DurableWakelockSmellMethodBean smellMethodBean = new DurableWakelockSmellMethodBean();
+                smellMethodBean.setMethodBean(methodBean);
+                smellMethodBean.setResolved(false);
+                smellMethodBean.setSourceFile(sourceFile);
+                smellMethodBean.setSmellType(SmellMethodBean.DURABLE_WAKELOCK);
+                smellMethodBean.setAcquireMethodInvocation(acquireMethodInvocation);
+                return smellMethodBean;
+            } else {
+                return null;
+            }
         }
     }
 }

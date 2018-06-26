@@ -1,11 +1,13 @@
 package adoctorr.application.analysis;
 
-import adoctorr.application.bean.SmellMethodBean;
+import adoctorr.application.ASTUtilities;
+import adoctorr.application.bean.*;
 import beans.ClassBean;
 import beans.MethodBean;
 import beans.PackageBean;
 import com.intellij.openapi.project.Project;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import parser.CodeParser;
 import process.FileUtilities;
@@ -112,51 +114,58 @@ public class Analyzer {
     public ArrayList<SmellMethodBean> analyze(ArrayList<PackageBean> packageList, HashMap<String, File> sourceFileMap) throws IOException {
         ArrayList<SmellMethodBean> smellMethodList = new ArrayList<>();
 
-        ArrayList<SmellMethodBean> durableWakelockList = null;
-        ArrayList<SmellMethodBean> dataTransmissionWithoutComrpessionList = null;
-        ArrayList<SmellMethodBean> prohibitedDataTransferList = null;
-        ArrayList<SmellMethodBean> bulkDataTransferOnSlowNetworkList = null;
-        ArrayList<SmellMethodBean> earlyResourceBindingList = null;
-        ArrayList<SmellMethodBean> rigidAlarmManagerList = null;
+        ArrayList<DurableWakelockSmellMethodBean> durableWakelockList = new ArrayList<>();
+        ArrayList<DataTransmissionWithoutCompressionSmellMethodBean> dataTransmissionWithoutCompressionList = new ArrayList<>();
+        ArrayList<ProhibitedDataTransferSmellMethodBean> prohibitedDataTransferList = new ArrayList<>();
+        ArrayList<BulkDataTransferOnSlowNetworkSmellMethodBean> bulkDataTransferOnSlowNetworkList = new ArrayList<>();
+        ArrayList<EarlyResourceBindingSmellMethodBean> earlyResourceBindingList = new ArrayList<>();
 
         DurableWakelockAnalyzer durableWakelockAnalyzer = new DurableWakelockAnalyzer();
         DataTransmissionWithoutCompressionAnalyzer dataTransmissionWithoutCompressionAnalyzer = new DataTransmissionWithoutCompressionAnalyzer();
         ProhibitedDataTransferAnalyzer prohibitedDataTransferAnalyzer = new ProhibitedDataTransferAnalyzer();
         BulkDataTransferOnSlowNetworkAnalyzer bulkDataTransferOnSlowNetworkAnalyzer = new BulkDataTransferOnSlowNetworkAnalyzer();
         EarlyResourceBindingAnalyzer earlyResourceBindingAnalyzer = new EarlyResourceBindingAnalyzer();
-        RigidAlarmManagerAnalyzer rigidAlarmManagerAnalyzer = new RigidAlarmManagerAnalyzer();
 
-        durableWakelockList = durableWakelockAnalyzer.analyze(packageList, sourceFileMap);
-        dataTransmissionWithoutComrpessionList = dataTransmissionWithoutCompressionAnalyzer.analyze(packageList, sourceFileMap);
-        prohibitedDataTransferList = prohibitedDataTransferAnalyzer.analyze(packageList, sourceFileMap);
-        bulkDataTransferOnSlowNetworkList = bulkDataTransferOnSlowNetworkAnalyzer.analyze(packageList, sourceFileMap);
-        earlyResourceBindingList = earlyResourceBindingAnalyzer.analyze(packageList, sourceFileMap);
-        rigidAlarmManagerList = rigidAlarmManagerAnalyzer.analyze(packageList, sourceFileMap);
+        for (PackageBean packageBean : packageList) {
+            for (ClassBean classBean : packageBean.getClasses()) {
+                String className = classBean.getName();
+                String packageName = packageBean.getName();
+                String classFullName = packageName + "." + className;
+                File sourceFile = sourceFileMap.get(classFullName);
 
-        if (durableWakelockList != null) {
-            smellMethodList.addAll(durableWakelockList);
-        }
-        if (dataTransmissionWithoutComrpessionList != null) {
-            smellMethodList.addAll(dataTransmissionWithoutComrpessionList);
-        }
-        if (prohibitedDataTransferList != null) {
-            smellMethodList.addAll(prohibitedDataTransferList);
-        }
-        if (bulkDataTransferOnSlowNetworkList != null) {
-            smellMethodList.addAll(bulkDataTransferOnSlowNetworkList);
-        }
-        if (earlyResourceBindingList != null) {
-            smellMethodList.addAll(earlyResourceBindingList);
-        }
-        if (rigidAlarmManagerList != null) {
-            smellMethodList.addAll(rigidAlarmManagerList);
-        }
+                CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
+                for (MethodBean methodBean : classBean.getMethods()) {
+                    MethodDeclaration methodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
 
-        if (smellMethodList.size() > 0) {
-            return smellMethodList;
-        } else {
-            return null;
+                    DurableWakelockSmellMethodBean durableWakelockSmellMethodBean = durableWakelockAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
+                    if (durableWakelockSmellMethodBean != null) {
+                        durableWakelockList.add(durableWakelockSmellMethodBean);
+                    }
+                    DataTransmissionWithoutCompressionSmellMethodBean dataTransmissionWithoutCompressionSmellMethodBean = dataTransmissionWithoutCompressionAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
+                    if (dataTransmissionWithoutCompressionSmellMethodBean != null) {
+                        dataTransmissionWithoutCompressionList.add(dataTransmissionWithoutCompressionSmellMethodBean);
+                    }
+                    ProhibitedDataTransferSmellMethodBean prohibitedDataTransferSmellMethodBean = prohibitedDataTransferAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
+                    if (prohibitedDataTransferSmellMethodBean != null) {
+                        prohibitedDataTransferList.add(prohibitedDataTransferSmellMethodBean);
+                    }
+                    BulkDataTransferOnSlowNetworkSmellMethodBean bulkDataTransferOnSlowNetworkSmellMethodBean = bulkDataTransferOnSlowNetworkAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
+                    if (bulkDataTransferOnSlowNetworkSmellMethodBean != null) {
+                        bulkDataTransferOnSlowNetworkList.add(bulkDataTransferOnSlowNetworkSmellMethodBean);
+                    }
+                    EarlyResourceBindingSmellMethodBean earlyResourceBindingSmellMethodBean = earlyResourceBindingAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
+                    if (earlyResourceBindingSmellMethodBean != null) {
+                        earlyResourceBindingList.add(earlyResourceBindingSmellMethodBean);
+                    }
+                }
+            }
         }
+        smellMethodList.addAll(durableWakelockList);
+        smellMethodList.addAll(dataTransmissionWithoutCompressionList);
+        smellMethodList.addAll(prohibitedDataTransferList);
+        smellMethodList.addAll(bulkDataTransferOnSlowNetworkList);
+        smellMethodList.addAll(earlyResourceBindingList);
+        return smellMethodList;
     }
 
     /**

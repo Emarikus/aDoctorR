@@ -66,12 +66,15 @@ public class SmellDialog extends JDialog {
             int smellType = smellMethodBean.getSmellType();
             String smellName = SmellMethodBean.getSmellName(smellType);
 
-            listSmellModel.addElement(smellName + "\n\t " + methodName);
+            listSmellModel.addElement(smellName + " - (" + methodName + "())");
         }
 
         listSmell.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) {
-                onUpdateSmellMethodDetails();
+                //This line prevents multiple fires
+                if (!e.getValueIsAdjusting()) {
+                    onUpdateSmellMethodDetails();
+                }
             }
         });
 
@@ -121,6 +124,8 @@ public class SmellDialog extends JDialog {
             labelMethodName.setText(methodFullName);
             areaActualCode.setText(smellMethodBean.getMethodBean().getTextContent());
             areaProposedCode.setText(proposedMethodDeclaration.toString());
+            areaActualCode.setCaretPosition(0);
+            areaProposedCode.setCaretPosition(0);
         } catch (IOException e1) {
             e1.printStackTrace();
         }

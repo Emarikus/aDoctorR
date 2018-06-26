@@ -1,18 +1,14 @@
 package adoctorr.application.refactoring;
 
 import adoctorr.application.ASTUtilities;
+import adoctorr.application.bean.DurableWakelockSmellMethodBean;
 import adoctorr.application.bean.ProposalMethodBean;
-import adoctorr.application.bean.SmellMethodBean;
 import beans.MethodBean;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import parser.CodeParser;
-import process.FileUtilities;
+import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class DurableWakelockProposer {
 
@@ -20,7 +16,7 @@ public class DurableWakelockProposer {
 
     }
 
-    public ProposalMethodBean computeProposal(SmellMethodBean smellMethodBean) throws IOException {
+    public ProposalMethodBean computeProposal(DurableWakelockSmellMethodBean smellMethodBean) throws IOException {
         if (smellMethodBean == null) {
             System.out.println("Errore precondizione");
             return null;
@@ -29,17 +25,36 @@ public class DurableWakelockProposer {
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-            MethodDeclaration proposedMethodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
+            MethodDeclaration methodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
+            if (methodDeclaration == null) {
+                return null;
+            } else {
+                MethodInvocation acquireMethodInvocation = smellMethodBean.getAcquireMethodInvocation();
+                if (acquireMethodInvocation == null) {
+                    return null;
+                } else {
+                    AST targetAST = compilationUnit.getAST();
+                    MethodInvocation releaseMethodInvocation = targetAST.newMethodInvocation();
 
-            //TODO (super altissima): Computa proposta lavorando con il targetAST, lo smellMethodBean e la proposedMethodDeclaration
-            AST targetAST = compilationUnit.getAST();
-            //TODO: Get the first wakelock and create a release() MethodInvocation for what wakelock and add it at the end of the method
+                    Expression acquireExpression = acquireMethodInvocation.getExpression();
+                    SimpleName releaseSimpleName = targetAST.newSimpleName("release");
+                    releaseMethodInvocation.setExpression((Expression) ASTNode.copySubtree(targetAST, acquireExpression));
+                    releaseMethodInvocation.setName(releaseSimpleName);
 
-            ProposalMethodBean proposalMethodBean = new ProposalMethodBean();
-            proposalMethodBean.setSmellMethodBean(smellMethodBean);
-            proposalMethodBean.setProposedMethodDeclaration(proposedMethodDeclaration);
+                    // Wrap the MethodInvocation in an ExpressionStatement
+                    ExpressionStatement releaseExpressionStatement = targetAST.newExpressionStatement(releaseMethodInvocation);
 
-            return proposalMethodBean;
+                    //TODO: Migliorare il fatto del punto di inserimento a seconda dello scope del wakelock
+                    List<Statement> statementList = methodDeclaration.getBody().statements();
+                    statementList.add(releaseExpressionStatement);
+
+                    ProposalMethodBean proposalMethodBean = new ProposalMethodBean();
+                    proposalMethodBean.setSmellMethodBean(smellMethodBean);
+                    proposalMethodBean.setProposedMethodDeclaration(methodDeclaration);
+                    return proposalMethodBean;
+                }
+            }
+
         }
     }
 }

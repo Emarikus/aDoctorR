@@ -1,12 +1,15 @@
 package adoctorr.application.analysis;
 
 import adoctorr.application.ASTUtilities;
+import adoctorr.application.bean.BulkDataTransferOnSlowNetworkSmellMethodBean;
+import adoctorr.application.bean.DurableWakelockSmellMethodBean;
 import adoctorr.application.bean.SmellMethodBean;
 import beans.ClassBean;
 import beans.MethodBean;
 import beans.PackageBean;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import parser.CodeParser;
 import process.FileUtilities;
 
@@ -14,37 +17,65 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BulkDataTransferOnSlowNetworkAnalyzer {
 
-    /**
-     * @param packageList
-     * @param sourceFileMap
-     * @return
-     * @throws IOException
-     */
-    public ArrayList<SmellMethodBean> analyze(ArrayList<PackageBean> packageList, HashMap<String, File> sourceFileMap) throws IOException {
-        ArrayList<SmellMethodBean> smellList = new ArrayList<>();
+    //TODO: Fare bene
+    // Warning: Source code with method-level compile error and accents might give problems in the methodDeclaration fetch
+    public BulkDataTransferOnSlowNetworkSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, File sourceFile) {
+        if (methodBean == null) {
+            return null;
+        } else if (methodDeclaration == null) {
+            return null;
+        } else if (sourceFile == null) {
+            return null;
+        } else {
+            String wakelockName = "";
+            String methodContent = methodDeclaration.toString();
+            // Regex to get all the acquire()
+            Pattern acquireRegex = Pattern.compile("(.*)acquire(\\s*)\\(\\)", Pattern.MULTILINE);
+            Matcher acquireMatcher = acquireRegex.matcher(methodContent);
 
-        for (PackageBean packageBean : packageList) {
-            for (ClassBean classBean : packageBean.getClasses()) {
-                String className = classBean.getName();
-                String packageName = packageBean.getName();
-                String classFullName = packageName + "." + className;
-                File sourceFile = sourceFileMap.get(classFullName);
-
-                CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-                for (MethodBean methodBean : classBean.getMethods()) {
-                    MethodDeclaration methodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
-
-                    // Warning: Source code with accents might give problems in the methodDeclaration fetch
-                    if (methodDeclaration != null) {
-                        // TODO: Analizza il methodDeclaration e il methodBean per cercare lo bean, quando ne trova uno
-                        //TODO: costruisce lo SmellMethodBean e lo aggiunge alla smellList
+            boolean smellFound = false;
+            while (!smellFound && acquireMatcher.find()) {
+                String matchingString = acquireMatcher.group();
+                wakelockName = matchingString.substring(0, matchingString.indexOf(".")).replaceAll("\\s+", "");
+                // Look for the release of the same wakelock
+                Pattern releaseRegex = Pattern.compile(wakelockName + "\\.release(\\s*)\\(\\)", Pattern.MULTILINE);
+                Matcher releaseMatcher = releaseRegex.matcher(methodContent);
+                // If the corresponding release is not found
+                if (!releaseMatcher.find()) {
+                    smellFound = true;
+                } else {
+                    // there are some corresponding release in the method
+                    int acquireStart = acquireMatcher.start();
+                    // repeat for every corresponding release: checking if there is no one located after the acquire
+                    boolean foundAfter = false;
+                    do {
+                        int releaseStart = releaseMatcher.start();
+                        if (releaseStart > acquireStart) {
+                            foundAfter = true;
+                        }
                     }
+                    while (!foundAfter && releaseMatcher.find());
+                    smellFound = !foundAfter;
                 }
             }
+            if (smellFound) {
+                String acquireString = wakelockName + ".acquire()";
+                MethodInvocation acquireMethodInvocation = ASTUtilities.getNodeFromInvocationName(methodDeclaration, acquireString);
+
+                BulkDataTransferOnSlowNetworkSmellMethodBean smellMethodBean = new BulkDataTransferOnSlowNetworkSmellMethodBean();
+                smellMethodBean.setMethodBean(methodBean);
+                smellMethodBean.setResolved(false);
+                smellMethodBean.setSourceFile(sourceFile);
+                smellMethodBean.setSmellType(SmellMethodBean.BULK_DATA_TRANSFER_ON_SLOW_NETWORK);
+                return smellMethodBean;
+            } else {
+                return null;
+            }
         }
-        return smellList;
     }
 }

@@ -1,7 +1,6 @@
 package adoctorr.application.refactoring;
 
-import adoctorr.application.bean.ProposalMethodBean;
-import adoctorr.application.bean.SmellMethodBean;
+import adoctorr.application.bean.*;
 import com.intellij.openapi.project.Project;
 
 import java.io.IOException;
@@ -16,36 +15,36 @@ public class Proposer {
     public ProposalMethodBean computeProposal(SmellMethodBean smellMethodBean) throws IOException {
         if (smellMethodBean != null) {
             int smellType = smellMethodBean.getSmellType();
-            ProposalMethodBean proposedMethodBean = null;
+            ProposalMethodBean proposedMethodBean;
             switch (smellType) {
                 case SmellMethodBean.DURABLE_WAKELOCK: {
                     DurableWakelockProposer durableWakelockProposer = new DurableWakelockProposer();
-                    proposedMethodBean = durableWakelockProposer.computeProposal(smellMethodBean);
+                    DurableWakelockSmellMethodBean durableWakelockSmellMethodBean = (DurableWakelockSmellMethodBean) smellMethodBean;
+                    proposedMethodBean = durableWakelockProposer.computeProposal(durableWakelockSmellMethodBean);
                     break;
                 }
                 case SmellMethodBean.DATA_TRANSMISSION_WITHOUT_COMPRESSION: {
                     DataTransmissionWithoutCompressionProposer dataTransmissionWithoutCompressionProposer = new DataTransmissionWithoutCompressionProposer();
-                    proposedMethodBean = dataTransmissionWithoutCompressionProposer.computeProposal(smellMethodBean);
+                    DataTransmissionWithoutCompressionSmellMethodBean dataTransmissionWithoutCompressionSmellMethodBean = (DataTransmissionWithoutCompressionSmellMethodBean) smellMethodBean;
+                    proposedMethodBean = dataTransmissionWithoutCompressionProposer.computeProposal(dataTransmissionWithoutCompressionSmellMethodBean);
                     break;
                 }
                 case SmellMethodBean.PROHIBITED_DATA_TRANSFER: {
                     ProhibitedDataTransferProposer prohibitedDataTransferProposer = new ProhibitedDataTransferProposer();
-                    proposedMethodBean = prohibitedDataTransferProposer.computeProposal(smellMethodBean);
+                    ProhibitedDataTransferSmellMethodBean prohibitedDataTransferSmellMethodBean = (ProhibitedDataTransferSmellMethodBean) smellMethodBean;
+                    proposedMethodBean = prohibitedDataTransferProposer.computeProposal(prohibitedDataTransferSmellMethodBean);
                     break;
                 }
-                case SmellMethodBean.BULK_DATA_TRANSFR_ON_SLOW_NETWORK: {
+                case SmellMethodBean.BULK_DATA_TRANSFER_ON_SLOW_NETWORK: {
                     BulkDataTransferOnSlowNetworkProposer bulkDataTransferOnSlowNetworkProposer = new BulkDataTransferOnSlowNetworkProposer();
-                    proposedMethodBean = bulkDataTransferOnSlowNetworkProposer.computeProposal(smellMethodBean);
+                    BulkDataTransferOnSlowNetworkSmellMethodBean bulkDataTransferOnSlowNetworkSmellMethodBean = (BulkDataTransferOnSlowNetworkSmellMethodBean) smellMethodBean;
+                    proposedMethodBean = bulkDataTransferOnSlowNetworkProposer.computeProposal(bulkDataTransferOnSlowNetworkSmellMethodBean);
                     break;
                 }
                 case SmellMethodBean.EARLY_RESOURCE_BINDING: {
                     EarlyResourceBindingProposer earlyResourceBindingProposer = new EarlyResourceBindingProposer();
-                    proposedMethodBean = earlyResourceBindingProposer.computeProposal(smellMethodBean);
-                    break;
-                }
-                case SmellMethodBean.RIGID_ALARM_MANAGER: {
-                    RigidAlarmManagerProposer rigidAlarmManagerProposer = new RigidAlarmManagerProposer();
-                    proposedMethodBean = rigidAlarmManagerProposer.computeProposal(smellMethodBean);
+                    EarlyResourceBindingSmellMethodBean earlyResourceBindingSmellMethodBean = (EarlyResourceBindingSmellMethodBean) smellMethodBean;
+                    proposedMethodBean = earlyResourceBindingProposer.computeProposal(earlyResourceBindingSmellMethodBean);
                     break;
                 }
                 default:
