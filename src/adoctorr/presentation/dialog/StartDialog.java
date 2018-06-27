@@ -1,36 +1,34 @@
 package adoctorr.presentation.dialog;
 
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class StartDialog extends JDialog {
     private JPanel contentPane;
-    private JPanel descriptionPane;
-    private JPanel analysisPane;
-    private JPanel toolPane;
 
     private JButton buttonStart;
-    private JButton buttonExit;
+    private JButton buttonQuit;
     private JButton buttonAbout;
-
-    private JLabel labelWelcome;
-    private JLabel labelDescription;
-    private JLabel labelSave;
 
     private Project project;
 
     /**
      * Default constructor and initializator of the dialog
+     *
      * @param project
      */
     private StartDialog(Project project) {
         // Leave them as they are
         setContentPane(contentPane);
         setModal(true);
-        getRootPane().setDefaultButton(buttonStart);    //Pressing Enter means clicking buttonStart
+        //Pressing Enter means clicking buttonStart
+        getRootPane().setDefaultButton(buttonStart);
+        setTitle("aDoctor-R");
 
         this.project = project;
 
@@ -41,25 +39,32 @@ public class StartDialog extends JDialog {
             }
         });
 
-        buttonExit.addActionListener(new ActionListener() {
+        buttonQuit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                onExit();
+                onQuit();
             }
         });
 
-        // call onExit() when cross is clicked
+        buttonAbout.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onAbout();
+            }
+        });
+
+        // call onQuit() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                onExit();
+                onQuit();
             }
         });
 
         /*
-        // call onExit() on ESCAPE
+        // call onQuit() on ESCAPE
         contentPane.registerKeyboardAction(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                onExit();
+                onQuit();
             }
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         */
@@ -67,6 +72,7 @@ public class StartDialog extends JDialog {
 
     /**
      * First and only method from the outside to be called in order to show this dialog
+     *
      * @param project
      */
     public static void show(Project project) {
@@ -84,9 +90,6 @@ public class StartDialog extends JDialog {
     private void onStartAnalysis() {
         dispose();
 
-        // Save all files in the current project
-        FileDocumentManager.getInstance().saveAllDocuments();
-
         // Starts the analysis by showing the AnalysisDialog
         AnalysisDialog.show(project);
     }
@@ -95,7 +98,11 @@ public class StartDialog extends JDialog {
      * Exit from the plugin
      * Called when Exit button is clicked
      */
-    private void onExit() {
+    private void onQuit() {
         dispose();
+    }
+
+    private void onAbout() {
+        //TODO: Shows the AboutDialog
     }
 }

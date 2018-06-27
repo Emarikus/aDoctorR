@@ -4,6 +4,7 @@ import adoctorr.application.ASTUtilities;
 import adoctorr.application.bean.ProposalMethodBean;
 import adoctorr.application.bean.SmellMethodBean;
 import beans.MethodBean;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -11,6 +12,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.TextEdit;
+import org.eclipse.text.edits.UndoEdit;
 import process.FileUtilities;
 
 import java.io.File;
@@ -35,6 +37,8 @@ public class Refactorer {
             File sourceFile = smellMethodBean.getSourceFile();
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
+            System.out.println("Filename: " + sourceFile.getName());
+
             // Builds the Document object
             String targetSource = FileUtilities.readFile(sourceFile.getAbsolutePath());
             Document document = new Document(targetSource);
@@ -46,25 +50,30 @@ public class Refactorer {
 
             // MethodDeclaration to be replaced
             MethodDeclaration targetMethodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
-            if(targetMethodDeclaration == null){
+            if (targetMethodDeclaration == null) {
                 return false;
             } else {
                 // Refactoring phase
                 AST targetAST = compilationUnit.getAST();
                 ASTRewrite rewriter = ASTRewrite.create(targetAST);
                 rewriter.replace(targetMethodDeclaration, proposedMethodDeclaration, null);
-                TextEdit edits = rewriter.rewriteAST(document, null);
-                edits.apply(document, TextEdit.UPDATE_REGIONS);
+                // With JavaCore Options we keep the code format settings, so the \n
+                TextEdit edits = rewriter.rewriteAST(document, JavaCore.getDefaultOptions());
+                //TODO: Implementare uno stack di Undo
+                // The UndoEdit could be used on the same document to reverse the changes
+                UndoEdit undoEdit = edits.apply(document, TextEdit.CREATE_UNDO | TextEdit.UPDATE_REGIONS);
                 String documentContent = document.get();
                 //TODO: Debug
                 System.out.println("---Documento Rifattorizzato---");
                 System.out.println(documentContent);
-                //TODO: Le edits non presentano gli \n. Come si risolve?
-                //TODO: Slow method, dare avviso all'utente
+
                 // Overwrite directly the file
                 PrintWriter pw = new PrintWriter(new FileOutputStream(sourceFile, false));
-                pw.println(documentContent);
-                pw.close();
+                pw.print(documentContent);
+                // Impotant
+                pw.flush();
+
+                System.out.println("Scrittura finita");
 
                 return true;
             }
