@@ -42,9 +42,6 @@ public class Refactorer {
             // Builds the Document object
             String targetSource = FileUtilities.readFile(sourceFile.getAbsolutePath());
             Document document = new Document(targetSource);
-            //TODO: Debug
-            System.out.println("---Documento Attuale---");
-            System.out.println(document.get());
 
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
 
@@ -59,21 +56,17 @@ public class Refactorer {
                 rewriter.replace(targetMethodDeclaration, proposedMethodDeclaration, null);
                 // With JavaCore Options we keep the code format settings, so the \n
                 TextEdit edits = rewriter.rewriteAST(document, JavaCore.getDefaultOptions());
-                //TODO: Implementare uno stack di Undo
+                //TODO 5: Implementare uno stack di Undo
                 // The UndoEdit could be used on the same document to reverse the changes
                 UndoEdit undoEdit = edits.apply(document, TextEdit.CREATE_UNDO | TextEdit.UPDATE_REGIONS);
                 String documentContent = document.get();
-                //TODO: Debug
-                System.out.println("---Documento Rifattorizzato---");
-                System.out.println(documentContent);
 
                 // Overwrite directly the file
                 PrintWriter pw = new PrintWriter(new FileOutputStream(sourceFile, false));
                 pw.print(documentContent);
-                // Impotant
-                pw.flush();
+                pw.flush(); // Impotant
 
-                System.out.println("Scrittura finita");
+                System.out.println("Scrittura sul file terminata");
 
                 return true;
             }

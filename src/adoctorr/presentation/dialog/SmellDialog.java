@@ -9,6 +9,9 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -117,13 +120,28 @@ public class SmellDialog extends JDialog {
 
             labelSmellName.setText(SmellMethodBean.getSmellName(smellMethodBean.getSmellType()));
             labelMethodName.setText(methodFullName);
-            areaActualCode.setText(smellMethodBean.getMethodBean().getTextContent());
+
+            String actualCode = smellMethodBean.getMethodBean().getTextContent();
+            String proposedCode = proposedMethodDeclaration.toString();
+            areaActualCode.setText(actualCode);
             areaActualCode.setCaretPosition(0);
-            //TODO: Evidenziare punto refactoring
-            areaProposedCode.setText(proposedMethodDeclaration.toString());
+            areaProposedCode.setText(proposedCode);
             areaProposedCode.setCaretPosition(0);
+
+            Highlighter highlighter = areaProposedCode.getHighlighter();
+            highlighter.removeAllHighlights();
+            ArrayList<String> proposedCodeToHighlightList = proposalMethodBean.getProposedCodeToHighlightList();
+            if (proposedCodeToHighlightList != null && proposedCodeToHighlightList.size() > 0) {
+                for (String proposedCodeToHighlight : proposedCodeToHighlightList) {
+                    int highlightIndex = proposedCode.indexOf(proposedCodeToHighlight);
+                    highlighter.addHighlight(highlightIndex, highlightIndex + proposedCodeToHighlight.length(), DefaultHighlighter.DefaultPainter);
+                }
+            }
         } catch (IOException e1) {
             e1.printStackTrace();
+        } catch (BadLocationException e2) {
+            // When the index of the string to highlight is wrong
+            e2.printStackTrace();
         }
     }
 

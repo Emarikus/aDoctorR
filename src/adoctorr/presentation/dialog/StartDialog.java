@@ -103,6 +103,7 @@ public class StartDialog extends JDialog {
     }
 
     private void onAbout() {
-        //TODO: Shows the AboutDialog
+        dispose();
+        AboutDialog.show(project);
     }
 }

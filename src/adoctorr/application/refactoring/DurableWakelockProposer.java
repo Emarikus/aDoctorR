@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DurableWakelockProposer {
@@ -34,23 +35,27 @@ public class DurableWakelockProposer {
                     return null;
                 } else {
                     AST targetAST = compilationUnit.getAST();
-                    MethodInvocation releaseMethodInvocation = targetAST.newMethodInvocation();
 
                     Expression acquireExpression = acquireMethodInvocation.getExpression();
                     SimpleName releaseSimpleName = targetAST.newSimpleName("release");
+
+                    MethodInvocation releaseMethodInvocation = targetAST.newMethodInvocation();
                     releaseMethodInvocation.setExpression((Expression) ASTNode.copySubtree(targetAST, acquireExpression));
                     releaseMethodInvocation.setName(releaseSimpleName);
-
                     // Wrap the MethodInvocation in an ExpressionStatement
                     ExpressionStatement releaseExpressionStatement = targetAST.newExpressionStatement(releaseMethodInvocation);
 
-                    //TODO: Migliorare il fatto del punto di inserimento a seconda dello scope del wakelock
+                    //TODO 3: Migliorare il fatto del punto di inserimento a seconda dello scope del wakelock
                     List<Statement> statementList = methodDeclaration.getBody().statements();
                     statementList.add(releaseExpressionStatement);
+
+                    ArrayList<String> proposedCodeToHighlightList = new ArrayList<>();
+                    proposedCodeToHighlightList.add(releaseMethodInvocation.toString() + ";");
 
                     ProposalMethodBean proposalMethodBean = new ProposalMethodBean();
                     proposalMethodBean.setSmellMethodBean(smellMethodBean);
                     proposalMethodBean.setProposedMethodDeclaration(methodDeclaration);
+                    proposalMethodBean.setProposedCodeToHighlightList(proposedCodeToHighlightList);
                     return proposalMethodBean;
                 }
             }
