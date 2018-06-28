@@ -1,6 +1,6 @@
 package adoctorr.application.analysis;
 
-import adoctorr.application.ASTUtilities;
+import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.*;
 import beans.ClassBean;
 import beans.MethodBean;
@@ -135,7 +135,7 @@ public class Analyzer {
 
                 CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
                 for (MethodBean methodBean : classBean.getMethods()) {
-                    MethodDeclaration methodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
+                    MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
 
                     DurableWakelockSmellMethodBean durableWakelockSmellMethodBean = durableWakelockAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
                     if (durableWakelockSmellMethodBean != null) {

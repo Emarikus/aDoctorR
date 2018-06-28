@@ -1,6 +1,6 @@
 package adoctorr.application.refactoring;
 
-import adoctorr.application.ASTUtilities;
+import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.ProposalMethodBean;
 import adoctorr.application.bean.SmellMethodBean;
 import beans.MethodBean;
@@ -26,7 +26,7 @@ public class EarlyResourceBindingProposer {
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-            MethodDeclaration proposedMethodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
+            MethodDeclaration proposedMethodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
 
             //TODO (super altissima): Computa proposta lavorando con il targetAST, lo smellMethodBean e la proposedMethodDeclaration
             AST targetAST = compilationUnit.getAST();

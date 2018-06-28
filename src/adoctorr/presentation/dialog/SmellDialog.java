@@ -62,7 +62,7 @@ public class SmellDialog extends JDialog {
             int smellType = smellMethodBean.getSmellType();
             String smellName = SmellMethodBean.getSmellName(smellType);
 
-            listSmellModel.addElement(methodName + " - " + smellName + "()");
+            listSmellModel.addElement(methodName + "() - " + smellName);
         }
 
         listSmell.addListSelectionListener(new ListSelectionListener() {

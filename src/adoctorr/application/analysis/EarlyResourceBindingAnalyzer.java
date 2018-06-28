@@ -1,22 +1,13 @@
 package adoctorr.application.analysis;
 
-import adoctorr.application.ASTUtilities;
-import adoctorr.application.bean.DataTransmissionWithoutCompressionSmellMethodBean;
+import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.EarlyResourceBindingSmellMethodBean;
 import adoctorr.application.bean.SmellMethodBean;
-import beans.ClassBean;
 import beans.MethodBean;
-import beans.PackageBean;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import parser.CodeParser;
-import process.FileUtilities;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,7 +56,7 @@ public class EarlyResourceBindingAnalyzer {
             }
             if (smellFound) {
                 String acquireString = wakelockName + ".acquire()";
-                MethodInvocation acquireMethodInvocation = ASTUtilities.getNodeFromInvocationName(methodDeclaration, acquireString);
+                MethodInvocation acquireMethodInvocation = ASTUtilities.getMethodInvocationInMethod(acquireString, methodDeclaration);
 
                 EarlyResourceBindingSmellMethodBean smellMethodBean = new EarlyResourceBindingSmellMethodBean();
                 smellMethodBean.setMethodBean(methodBean);

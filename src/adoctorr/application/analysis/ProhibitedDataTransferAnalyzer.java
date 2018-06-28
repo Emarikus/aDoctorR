@@ -1,7 +1,6 @@
 package adoctorr.application.analysis;
 
-import adoctorr.application.ASTUtilities;
-import adoctorr.application.bean.EarlyResourceBindingSmellMethodBean;
+import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.ProhibitedDataTransferSmellMethodBean;
 import adoctorr.application.bean.SmellMethodBean;
 import beans.MethodBean;
@@ -57,7 +56,7 @@ public class ProhibitedDataTransferAnalyzer {
             }
             if (smellFound) {
                 String acquireString = wakelockName + ".acquire()";
-                MethodInvocation acquireMethodInvocation = ASTUtilities.getNodeFromInvocationName(methodDeclaration, acquireString);
+                MethodInvocation acquireMethodInvocation = ASTUtilities.getMethodInvocationInMethod(acquireString, methodDeclaration);
 
                 ProhibitedDataTransferSmellMethodBean smellMethodBean = new ProhibitedDataTransferSmellMethodBean();
                 smellMethodBean.setMethodBean(methodBean);

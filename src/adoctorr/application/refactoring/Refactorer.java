@@ -1,6 +1,6 @@
 package adoctorr.application.refactoring;
 
-import adoctorr.application.ASTUtilities;
+import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.ProposalMethodBean;
 import adoctorr.application.bean.SmellMethodBean;
 import beans.MethodBean;
@@ -46,7 +46,7 @@ public class Refactorer {
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
 
             // MethodDeclaration to be replaced
-            MethodDeclaration targetMethodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
+            MethodDeclaration targetMethodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
             if (targetMethodDeclaration == null) {
                 return false;
             } else {

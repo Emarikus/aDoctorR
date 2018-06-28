@@ -1,6 +1,6 @@
 package adoctorr.application.refactoring;
 
-import adoctorr.application.ASTUtilities;
+import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.DurableWakelockSmellMethodBean;
 import adoctorr.application.bean.ProposalMethodBean;
 import beans.MethodBean;
@@ -13,7 +13,7 @@ import java.util.List;
 
 public class DurableWakelockProposer {
 
-    public DurableWakelockProposer() {
+    DurableWakelockProposer() {
 
     }
 
@@ -26,31 +26,36 @@ public class DurableWakelockProposer {
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-            MethodDeclaration methodDeclaration = ASTUtilities.getNodeFromBean(methodBean, compilationUnit);
+            MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
             if (methodDeclaration == null) {
                 return null;
             } else {
-                MethodInvocation acquireMethodInvocation = smellMethodBean.getAcquireMethodInvocation();
-                if (acquireMethodInvocation == null) {
+                Statement acquireStatement = smellMethodBean.getAcquireStatement();
+                if (acquireStatement == null) {
                     return null;
                 } else {
                     AST targetAST = compilationUnit.getAST();
-
-                    Expression acquireExpression = acquireMethodInvocation.getExpression();
-                    SimpleName releaseSimpleName = targetAST.newSimpleName("release");
-
                     MethodInvocation releaseMethodInvocation = targetAST.newMethodInvocation();
-                    releaseMethodInvocation.setExpression((Expression) ASTNode.copySubtree(targetAST, acquireExpression));
+
+                    // This is done in order to het the wakelock identifier
+                    ExpressionStatement acquireExpressionStatement = (ExpressionStatement) acquireStatement;
+                    Expression acquireExpression = acquireExpressionStatement.getExpression();
+                    MethodInvocation acquireMethodInvocation = (MethodInvocation) acquireExpression;
+                    releaseMethodInvocation.setExpression((Expression) ASTNode.copySubtree(targetAST, acquireMethodInvocation.getExpression()));
+
+                    SimpleName releaseSimpleName = targetAST.newSimpleName("release");
                     releaseMethodInvocation.setName(releaseSimpleName);
+
                     // Wrap the MethodInvocation in an ExpressionStatement
                     ExpressionStatement releaseExpressionStatement = targetAST.newExpressionStatement(releaseMethodInvocation);
 
-                    //TODO 3: Migliorare il fatto del punto di inserimento a seconda dello scope del wakelock
-                    List<Statement> statementList = methodDeclaration.getBody().statements();
+                    // If the scope is the method, then add it to the end of the method
+                    Block acquireBlock = ASTUtilities.getBlockInMethod(smellMethodBean.getAcquireBlock().toString(), methodDeclaration);
+                    List<Statement> statementList = acquireBlock.statements();
                     statementList.add(releaseExpressionStatement);
 
                     ArrayList<String> proposedCodeToHighlightList = new ArrayList<>();
-                    proposedCodeToHighlightList.add(releaseMethodInvocation.toString() + ";");
+                    proposedCodeToHighlightList.add(releaseExpressionStatement.toString());
 
                     ProposalMethodBean proposalMethodBean = new ProposalMethodBean();
                     proposalMethodBean.setSmellMethodBean(smellMethodBean);

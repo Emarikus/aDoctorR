@@ -1,20 +1,30 @@
 package adoctorr.application.bean;
 
-import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.Statement;
 
 public class DurableWakelockSmellMethodBean extends SmellMethodBean {
 
-    private MethodInvocation acquireMethodInvocation;
+    private Block acquireBlock;
+    private Statement acquireStatement;
 
     public DurableWakelockSmellMethodBean() {
         super();
     }
 
-    public MethodInvocation getAcquireMethodInvocation() {
-        return acquireMethodInvocation;
+    public Block getAcquireBlock() {
+        return acquireBlock;
     }
 
-    public void setAcquireMethodInvocation(MethodInvocation acquireMethodInvocation) {
-        this.acquireMethodInvocation = acquireMethodInvocation;
+    public void setAcquireBlock(Block acquireBlock) {
+        this.acquireBlock = acquireBlock;
+    }
+
+    public Statement getAcquireStatement() {
+        return acquireStatement;
+    }
+
+    public void setAcquireStatement(Statement acquireStatement) {
+        this.acquireStatement = acquireStatement;
     }
 }
