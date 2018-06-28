@@ -1,8 +1,10 @@
 package adoctorr.presentation.dialog;
 
-import adoctorr.application.bean.ProposalMethodBean;
-import adoctorr.application.bean.SmellMethodBean;
-import adoctorr.application.refactoring.Proposer;
+import adoctorr.application.bean.proposal.DurableWakelockProposalMethodBean;
+import adoctorr.application.bean.proposal.EarlyResourceBindingProposalMethodBean;
+import adoctorr.application.bean.proposal.ProposalMethodBean;
+import adoctorr.application.bean.smell.SmellMethodBean;
+import adoctorr.application.proposal.Proposer;
 import com.intellij.openapi.project.Project;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
@@ -113,30 +115,58 @@ public class SmellDialog extends JDialog {
         Proposer proposer = new Proposer(project);
         try {
             proposalMethodBean = proposer.computeProposal(smellMethodBean);
+
             String className = smellMethodBean.getMethodBean().getBelongingClass().getName();
             String packageName = smellMethodBean.getMethodBean().getBelongingClass().getBelongingPackage();
             String methodFullName = packageName + "." + className + "." + smellMethodBean.getMethodBean().getName();
-            MethodDeclaration proposedMethodDeclaration = proposalMethodBean.getProposedMethodDeclaration();
-
             labelSmellName.setText(SmellMethodBean.getSmellName(smellMethodBean.getSmellType()));
             labelMethodName.setText(methodFullName);
 
             String actualCode = smellMethodBean.getMethodBean().getTextContent();
-            String proposedCode = proposedMethodDeclaration.toString();
             areaActualCode.setText(actualCode);
             areaActualCode.setCaretPosition(0);
+
+            String proposedCode = "";
+            int smellType = proposalMethodBean.getSmellMethodBean().getSmellType();
+            switch (smellType) {
+                case SmellMethodBean.DURABLE_WAKELOCK: {
+                    DurableWakelockProposalMethodBean durableWakelockProposalMethodBean = (DurableWakelockProposalMethodBean) proposalMethodBean;
+                    MethodDeclaration proposedMethodDeclaration = durableWakelockProposalMethodBean.getProposedMethodDeclaration();
+                    proposedCode = proposedMethodDeclaration.toString();
+                    break;
+                }
+                case SmellMethodBean.EARLY_RESOURCE_BINDING: {
+                    EarlyResourceBindingProposalMethodBean earlyResourceBindingProposalMethodBean = (EarlyResourceBindingProposalMethodBean) proposalMethodBean;
+                    MethodDeclaration proposedOnCreate = earlyResourceBindingProposalMethodBean.getProposedOnCreate();
+                    MethodDeclaration proposedOnResume = earlyResourceBindingProposalMethodBean.getProposedOnResume();
+                    proposedCode= proposedOnCreate.toString() + "\n" + proposedOnResume.toString();
+                    break;
+                }
+                default:
+                    break;
+            }
             areaProposedCode.setText(proposedCode);
             areaProposedCode.setCaretPosition(0);
 
-            Highlighter highlighter = areaProposedCode.getHighlighter();
-            highlighter.removeAllHighlights();
+            Highlighter actualHighlighter = areaActualCode.getHighlighter();
+            actualHighlighter.removeAllHighlights();
+            ArrayList<String> actualCodeToHighlightList = proposalMethodBean.getActualCodeToHighlightList();
+            if (actualCodeToHighlightList != null && actualCodeToHighlightList.size() > 0) {
+                for (String actualCodeToHighlight : actualCodeToHighlightList) {
+                    int highlightIndex = proposedCode.indexOf(actualCodeToHighlight);
+                    actualHighlighter.addHighlight(highlightIndex, highlightIndex + actualCodeToHighlight.length(), DefaultHighlighter.DefaultPainter);
+                }
+            }
+            Highlighter proposedHighlighter = areaProposedCode.getHighlighter();
+            proposedHighlighter .removeAllHighlights();
             ArrayList<String> proposedCodeToHighlightList = proposalMethodBean.getProposedCodeToHighlightList();
             if (proposedCodeToHighlightList != null && proposedCodeToHighlightList.size() > 0) {
                 for (String proposedCodeToHighlight : proposedCodeToHighlightList) {
                     int highlightIndex = proposedCode.indexOf(proposedCodeToHighlight);
-                    highlighter.addHighlight(highlightIndex, highlightIndex + proposedCodeToHighlight.length(), DefaultHighlighter.DefaultPainter);
+                    proposedHighlighter .addHighlight(highlightIndex, highlightIndex + proposedCodeToHighlight.length(), DefaultHighlighter.DefaultPainter);
                 }
             }
+
         } catch (IOException e1) {
             e1.printStackTrace();
         } catch (BadLocationException e2) {

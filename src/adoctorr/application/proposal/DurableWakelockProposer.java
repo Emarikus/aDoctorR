@@ -1,8 +1,8 @@
-package adoctorr.application.refactoring;
+package adoctorr.application.proposal;
 
 import adoctorr.application.ast.ASTUtilities;
-import adoctorr.application.bean.DurableWakelockSmellMethodBean;
-import adoctorr.application.bean.ProposalMethodBean;
+import adoctorr.application.bean.proposal.DurableWakelockProposalMethodBean;
+import adoctorr.application.bean.smell.DurableWakelockSmellMethodBean;
 import beans.MethodBean;
 import org.eclipse.jdt.core.dom.*;
 
@@ -17,7 +17,7 @@ public class DurableWakelockProposer {
 
     }
 
-    public ProposalMethodBean computeProposal(DurableWakelockSmellMethodBean smellMethodBean) throws IOException {
+    public DurableWakelockProposalMethodBean computeProposal(DurableWakelockSmellMethodBean smellMethodBean) throws IOException {
         if (smellMethodBean == null) {
             System.out.println("Errore precondizione");
             return null;
@@ -37,7 +37,7 @@ public class DurableWakelockProposer {
                     AST targetAST = compilationUnit.getAST();
                     MethodInvocation releaseMethodInvocation = targetAST.newMethodInvocation();
 
-                    // This is done in order to het the wakelock identifier
+                    // This is done in order to get the wakelock identifier
                     ExpressionStatement acquireExpressionStatement = (ExpressionStatement) acquireStatement;
                     Expression acquireExpression = acquireExpressionStatement.getExpression();
                     MethodInvocation acquireMethodInvocation = (MethodInvocation) acquireExpression;
@@ -57,14 +57,13 @@ public class DurableWakelockProposer {
                     ArrayList<String> proposedCodeToHighlightList = new ArrayList<>();
                     proposedCodeToHighlightList.add(releaseExpressionStatement.toString());
 
-                    ProposalMethodBean proposalMethodBean = new ProposalMethodBean();
+                    DurableWakelockProposalMethodBean proposalMethodBean = new DurableWakelockProposalMethodBean();
                     proposalMethodBean.setSmellMethodBean(smellMethodBean);
                     proposalMethodBean.setProposedMethodDeclaration(methodDeclaration);
                     proposalMethodBean.setProposedCodeToHighlightList(proposedCodeToHighlightList);
                     return proposalMethodBean;
                 }
             }
-
         }
     }
 }

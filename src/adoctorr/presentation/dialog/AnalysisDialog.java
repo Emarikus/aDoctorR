@@ -1,16 +1,10 @@
 package adoctorr.presentation.dialog;
 
 import adoctorr.application.analysis.Analyzer;
-import adoctorr.application.bean.SmellMethodBean;
+import adoctorr.application.bean.smell.SmellMethodBean;
 import beans.PackageBean;
-import com.intellij.ide.SaveAndSyncHandlerImpl;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;

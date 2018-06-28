@@ -1,7 +1,7 @@
 package adoctorr.presentation.dialog;
 
-import adoctorr.application.bean.ProposalMethodBean;
-import adoctorr.application.bean.SmellMethodBean;
+import adoctorr.application.bean.proposal.ProposalMethodBean;
+import adoctorr.application.bean.smell.SmellMethodBean;
 import adoctorr.application.refactoring.Refactorer;
 import com.intellij.ide.SaveAndSyncHandlerImpl;
 import com.intellij.openapi.project.Project;

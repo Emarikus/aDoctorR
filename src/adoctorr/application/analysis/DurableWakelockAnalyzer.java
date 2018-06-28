@@ -1,10 +1,12 @@
 package adoctorr.application.analysis;
 
 import adoctorr.application.ast.ASTUtilities;
-import adoctorr.application.bean.DurableWakelockSmellMethodBean;
-import adoctorr.application.bean.SmellMethodBean;
+import adoctorr.application.bean.smell.DurableWakelockSmellMethodBean;
+import adoctorr.application.bean.smell.SmellMethodBean;
 import beans.MethodBean;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21,12 +23,13 @@ public class DurableWakelockAnalyzer {
         } else if (sourceFile == null) {
             return null;
         } else {
+            boolean smellFound = false;
+
             Block acquireBlock = null;
             Statement acquireStatement = null;
 
             ArrayList<Block> methodBlockList = ASTUtilities.getBlocksInMethod(methodDeclaration);
             int k = 0;
-            boolean smellFound = false;
             while (!smellFound && k < methodBlockList.size()) {
                 Block block = methodBlockList.get(k);
                 List<Statement> statementList = block.statements();
@@ -36,7 +39,6 @@ public class DurableWakelockAnalyzer {
                     Statement statement = statementList.get(i);
                     String callerName = ASTUtilities.getCallerName(statement, "acquire");
                     if (callerName != null) {
-
                         boolean releaseFound = false;
                         int j = i + 1;
                         while (!releaseFound && j < statementList.size()) {

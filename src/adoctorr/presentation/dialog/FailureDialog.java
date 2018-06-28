@@ -1,6 +1,6 @@
 package adoctorr.presentation.dialog;
 
-import adoctorr.application.bean.SmellMethodBean;
+import adoctorr.application.bean.smell.SmellMethodBean;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;

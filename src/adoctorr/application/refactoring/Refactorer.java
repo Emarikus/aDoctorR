@@ -1,24 +1,12 @@
 package adoctorr.application.refactoring;
 
-import adoctorr.application.ast.ASTUtilities;
-import adoctorr.application.bean.ProposalMethodBean;
-import adoctorr.application.bean.SmellMethodBean;
-import beans.MethodBean;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import adoctorr.application.bean.proposal.DurableWakelockProposalMethodBean;
+import adoctorr.application.bean.proposal.EarlyResourceBindingProposalMethodBean;
+import adoctorr.application.bean.proposal.ProposalMethodBean;
+import adoctorr.application.bean.smell.SmellMethodBean;
 import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.Document;
-import org.eclipse.text.edits.TextEdit;
-import org.eclipse.text.edits.UndoEdit;
-import process.FileUtilities;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 public class Refactorer {
 
@@ -26,50 +14,32 @@ public class Refactorer {
 
     }
 
-    //Applica il refactor e sovrascrive il file
-    public boolean applyRefactoring(ProposalMethodBean proposalMethodBean) throws BadLocationException, IOException {
+    // Applica il refactor e sovrascrive il file
+    public boolean applyRefactoring(ProposalMethodBean proposalMethodBean) throws IOException, BadLocationException {
         if (proposalMethodBean == null) {
             System.out.println("Errore precondizione");
             return false;
         } else {
-            MethodDeclaration proposedMethodDeclaration = proposalMethodBean.getProposedMethodDeclaration();
-            SmellMethodBean smellMethodBean = proposalMethodBean.getSmellMethodBean();
-            File sourceFile = smellMethodBean.getSourceFile();
-            MethodBean methodBean = smellMethodBean.getMethodBean();
-
-            System.out.println("Filename: " + sourceFile.getName());
-
-            // Builds the Document object
-            String targetSource = FileUtilities.readFile(sourceFile.getAbsolutePath());
-            Document document = new Document(targetSource);
-
-            CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-
-            // MethodDeclaration to be replaced
-            MethodDeclaration targetMethodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
-            if (targetMethodDeclaration == null) {
-                return false;
-            } else {
-                // Refactoring phase
-                AST targetAST = compilationUnit.getAST();
-                ASTRewrite rewriter = ASTRewrite.create(targetAST);
-                rewriter.replace(targetMethodDeclaration, proposedMethodDeclaration, null);
-                // With JavaCore Options we keep the code format settings, so the \n
-                TextEdit edits = rewriter.rewriteAST(document, JavaCore.getDefaultOptions());
-                //TODO 5: Implementare uno stack di Undo
-                // The UndoEdit could be used on the same document to reverse the changes
-                UndoEdit undoEdit = edits.apply(document, TextEdit.CREATE_UNDO | TextEdit.UPDATE_REGIONS);
-                String documentContent = document.get();
-
-                // Overwrite directly the file
-                PrintWriter pw = new PrintWriter(new FileOutputStream(sourceFile, false));
-                pw.print(documentContent);
-                pw.flush(); // Impotant
-
-                System.out.println("Scrittura sul file terminata");
-
-                return true;
+            boolean result = false;
+            int smellType = proposalMethodBean.getSmellMethodBean().getSmellType();
+            switch (smellType) {
+                case SmellMethodBean.DURABLE_WAKELOCK: {
+                    DurableWakelockProposalMethodBean durableWakelockProposalMethodBean = (DurableWakelockProposalMethodBean) proposalMethodBean;
+                    DurableWakelockRefactorer durableWakelockRefactorer = new DurableWakelockRefactorer();
+                    result = durableWakelockRefactorer.applyRefactor(durableWakelockProposalMethodBean);
+                    break;
+                }
+                case SmellMethodBean.EARLY_RESOURCE_BINDING: {
+                    EarlyResourceBindingProposalMethodBean earlyResourceBindingProposalMethodBean = (EarlyResourceBindingProposalMethodBean) proposalMethodBean;
+                    EarlyResourceBindingRefactorer earlyResourceBindingRefactorer = new EarlyResourceBindingRefactorer();
+                    result = earlyResourceBindingRefactorer.applyRefactor(earlyResourceBindingProposalMethodBean);
+                    //TODO
+                    break;
+                }
+                default:
+                    break;
             }
+            return result;
         }
     }
 }

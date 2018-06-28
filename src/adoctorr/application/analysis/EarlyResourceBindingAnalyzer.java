@@ -1,21 +1,20 @@
 package adoctorr.application.analysis;
 
 import adoctorr.application.ast.ASTUtilities;
-import adoctorr.application.bean.EarlyResourceBindingSmellMethodBean;
-import adoctorr.application.bean.SmellMethodBean;
+import adoctorr.application.bean.smell.EarlyResourceBindingSmellMethodBean;
+import adoctorr.application.bean.smell.SmellMethodBean;
 import beans.MethodBean;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EarlyResourceBindingAnalyzer {
 
-    //TODO: fare bene
+
     // Warning: Source code with method-level compile error and accents might give problems in the methodDeclaration fetch
-    public EarlyResourceBindingSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, File sourceFile) {
+    public EarlyResourceBindingSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, CompilationUnit compilationUnit, File sourceFile) {
         if (methodBean == null) {
             return null;
         } else if (methodDeclaration == null) {
@@ -23,49 +22,78 @@ public class EarlyResourceBindingAnalyzer {
         } else if (sourceFile == null) {
             return null;
         } else {
-            String wakelockName = "";
-            String methodContent = methodDeclaration.toString();
-            // Regex to get all the acquire()
-            Pattern acquireRegex = Pattern.compile("(.*)acquire(\\s*)\\(\\)", Pattern.MULTILINE);
-            Matcher acquireMatcher = acquireRegex.matcher(methodContent);
-
-            boolean smellFound = false;
-            while (!smellFound && acquireMatcher.find()) {
-                String matchingString = acquireMatcher.group();
-                wakelockName = matchingString.substring(0, matchingString.indexOf(".")).replaceAll("\\s+", "");
-                // Look for the release of the same wakelock
-                Pattern releaseRegex = Pattern.compile(wakelockName + "\\.release(\\s*)\\(\\)", Pattern.MULTILINE);
-                Matcher releaseMatcher = releaseRegex.matcher(methodContent);
-                // If the corresponding release is not found
-                if (!releaseMatcher.find()) {
-                    smellFound = true;
+            // Only for public|protected void onCreate(Bundle)
+            if (!methodDeclaration.getName().toString().equals("onCreate")) {
+                return null;
+            } else {
+                Type returnType = methodDeclaration.getReturnType2();
+                if (returnType == null && !returnType.toString().equals("void")) {
+                    return null;
                 } else {
-                    // there are some corresponding release in the method
-                    int acquireStart = acquireMatcher.start();
-                    // repeat for every corresponding release: checking if there is no one located after the acquire
-                    boolean foundAfter = false;
-                    do {
-                        int releaseStart = releaseMatcher.start();
-                        if (releaseStart > acquireStart) {
-                            foundAfter = true;
+                    boolean found = false;
+                    List modifierList = methodDeclaration.modifiers();
+                    int i = 0;
+                    int n = modifierList.size();
+                    while (!found && i < n) {
+                        IExtendedModifier modifier = (IExtendedModifier) modifierList.get(i);
+                        if (modifier.toString().equals("public") || modifier.toString().equals("protected")) {
+                            List parameters = methodDeclaration.parameters();
+                            if (parameters != null && parameters.size() > 0) {
+                                SingleVariableDeclaration parameter = (SingleVariableDeclaration) parameters.get(0);
+                                Type parameterType = parameter.getType();
+                                if (parameterType != null && parameterType.toString().equals("Bundle")) {
+                                    found = true;
+                                }
+                            }
+                        }
+                        i++;
+                    }
+                    if (!found) {
+                        return null;
+                    } else {
+                        boolean smellFound = false;
+                        Block requestBlock = null;
+                        Statement requestStatement = null;
+
+                        ArrayList<Block> methodBlockList = ASTUtilities.getBlocksInMethod(methodDeclaration);
+                        int k = 0;
+                        while (!smellFound && k < methodBlockList.size()) {
+                            Block block = methodBlockList.get(k);
+                            List<Statement> statementList = block.statements();
+
+                            int j = 0;
+                            while (!smellFound && j < statementList.size()) {
+                                Statement statement = statementList.get(j);
+                                String callerName = ASTUtilities.getCallerName(statement, "requestLocationUpdates");
+                                if (callerName != null) {
+                                    FieldDeclaration fieldDeclaration = ASTUtilities.getFieldDeclarationInClass(callerName, compilationUnit);
+                                    if (fieldDeclaration != null) {
+                                        smellFound = true;
+                                        requestBlock = block;
+                                        requestStatement = statement;
+                                    } else {
+                                        j++;
+                                    }
+                                } else {
+                                    j++;
+                                }
+                            }
+                            k++;
+                        }
+                        if (!smellFound) {
+                            return null;
+                        } else {
+                            EarlyResourceBindingSmellMethodBean smellMethodBean = new EarlyResourceBindingSmellMethodBean();
+                            smellMethodBean.setMethodBean(methodBean);
+                            smellMethodBean.setResolved(false);
+                            smellMethodBean.setSourceFile(sourceFile);
+                            smellMethodBean.setSmellType(SmellMethodBean.EARLY_RESOURCE_BINDING);
+                            smellMethodBean.setRequestBlock(requestBlock);
+                            smellMethodBean.setRequestStatement(requestStatement);
+                            return smellMethodBean;
                         }
                     }
-                    while (!foundAfter && releaseMatcher.find());
-                    smellFound = !foundAfter;
                 }
-            }
-            if (smellFound) {
-                String acquireString = wakelockName + ".acquire()";
-                MethodInvocation acquireMethodInvocation = ASTUtilities.getMethodInvocationInMethod(acquireString, methodDeclaration);
-
-                EarlyResourceBindingSmellMethodBean smellMethodBean = new EarlyResourceBindingSmellMethodBean();
-                smellMethodBean.setMethodBean(methodBean);
-                smellMethodBean.setResolved(false);
-                smellMethodBean.setSourceFile(sourceFile);
-                smellMethodBean.setSmellType(SmellMethodBean.EARLY_RESOURCE_BINDING);
-                return smellMethodBean;
-            } else {
-                return null;
             }
         }
     }

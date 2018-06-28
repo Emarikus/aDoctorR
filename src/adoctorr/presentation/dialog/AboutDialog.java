@@ -3,6 +3,7 @@ package adoctorr.presentation.dialog;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 
 public class AboutDialog extends JDialog {
@@ -14,6 +15,11 @@ public class AboutDialog extends JDialog {
     private AboutDialog(Project project) {
         setContentPane(contentPane);
         setModal(true);
+        final Toolkit toolkit = Toolkit.getDefaultToolkit();
+        final Dimension screenSize = toolkit.getScreenSize();
+        final int x = (screenSize.width - getWidth()) / 3;
+        final int y = (screenSize.height - getHeight()) / 3;
+        setLocation(x, y);
         getRootPane().setDefaultButton(buttonBack);
 
         this.project = project;

@@ -1,4 +1,4 @@
-package adoctorr.application.bean;
+package adoctorr.application.bean.smell;
 
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Statement;

@@ -1,16 +1,24 @@
-package adoctorr.application.bean;
+package adoctorr.application.bean.proposal;
 
 
-import org.eclipse.jdt.core.dom.MethodDeclaration;
+import adoctorr.application.bean.smell.SmellMethodBean;
 
 import java.util.ArrayList;
 
 public class ProposalMethodBean {
     private SmellMethodBean smellMethodBean;
-    private MethodDeclaration proposedMethodDeclaration;
+    private ArrayList<String> actualCodeToHighlightList;
     private ArrayList<String> proposedCodeToHighlightList;
 
     public ProposalMethodBean() {
+    }
+
+    public ArrayList<String> getActualCodeToHighlightList() {
+        return actualCodeToHighlightList;
+    }
+
+    public void setActualCodeToHighlightList(ArrayList<String> actualCodeToHighlightList) {
+        this.actualCodeToHighlightList = actualCodeToHighlightList;
     }
 
     public ArrayList<String> getProposedCodeToHighlightList() {
@@ -27,13 +35,5 @@ public class ProposalMethodBean {
 
     public void setSmellMethodBean(SmellMethodBean smellMethodBean) {
         this.smellMethodBean = smellMethodBean;
-    }
-
-    public MethodDeclaration getProposedMethodDeclaration() {
-        return proposedMethodDeclaration;
-    }
-
-    public void setProposedMethodDeclaration(MethodDeclaration proposedMethodDeclaration) {
-        this.proposedMethodDeclaration = proposedMethodDeclaration;
     }
 }

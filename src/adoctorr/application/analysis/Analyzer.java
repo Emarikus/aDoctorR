@@ -1,7 +1,9 @@
 package adoctorr.application.analysis;
 
 import adoctorr.application.ast.ASTUtilities;
-import adoctorr.application.bean.*;
+import adoctorr.application.bean.smell.DurableWakelockSmellMethodBean;
+import adoctorr.application.bean.smell.EarlyResourceBindingSmellMethodBean;
+import adoctorr.application.bean.smell.SmellMethodBean;
 import beans.ClassBean;
 import beans.MethodBean;
 import beans.PackageBean;
@@ -115,15 +117,9 @@ public class Analyzer {
         ArrayList<SmellMethodBean> smellMethodList = new ArrayList<>();
 
         ArrayList<DurableWakelockSmellMethodBean> durableWakelockList = new ArrayList<>();
-        ArrayList<DataTransmissionWithoutCompressionSmellMethodBean> dataTransmissionWithoutCompressionList = new ArrayList<>();
-        ArrayList<ProhibitedDataTransferSmellMethodBean> prohibitedDataTransferList = new ArrayList<>();
-        ArrayList<BulkDataTransferOnSlowNetworkSmellMethodBean> bulkDataTransferOnSlowNetworkList = new ArrayList<>();
         ArrayList<EarlyResourceBindingSmellMethodBean> earlyResourceBindingList = new ArrayList<>();
 
         DurableWakelockAnalyzer durableWakelockAnalyzer = new DurableWakelockAnalyzer();
-        DataTransmissionWithoutCompressionAnalyzer dataTransmissionWithoutCompressionAnalyzer = new DataTransmissionWithoutCompressionAnalyzer();
-        ProhibitedDataTransferAnalyzer prohibitedDataTransferAnalyzer = new ProhibitedDataTransferAnalyzer();
-        BulkDataTransferOnSlowNetworkAnalyzer bulkDataTransferOnSlowNetworkAnalyzer = new BulkDataTransferOnSlowNetworkAnalyzer();
         EarlyResourceBindingAnalyzer earlyResourceBindingAnalyzer = new EarlyResourceBindingAnalyzer();
 
         for (PackageBean packageBean : packageList) {
@@ -141,19 +137,7 @@ public class Analyzer {
                     if (durableWakelockSmellMethodBean != null) {
                         durableWakelockList.add(durableWakelockSmellMethodBean);
                     }
-                    DataTransmissionWithoutCompressionSmellMethodBean dataTransmissionWithoutCompressionSmellMethodBean = dataTransmissionWithoutCompressionAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
-                    if (dataTransmissionWithoutCompressionSmellMethodBean != null) {
-                        dataTransmissionWithoutCompressionList.add(dataTransmissionWithoutCompressionSmellMethodBean);
-                    }
-                    ProhibitedDataTransferSmellMethodBean prohibitedDataTransferSmellMethodBean = prohibitedDataTransferAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
-                    if (prohibitedDataTransferSmellMethodBean != null) {
-                        prohibitedDataTransferList.add(prohibitedDataTransferSmellMethodBean);
-                    }
-                    BulkDataTransferOnSlowNetworkSmellMethodBean bulkDataTransferOnSlowNetworkSmellMethodBean = bulkDataTransferOnSlowNetworkAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
-                    if (bulkDataTransferOnSlowNetworkSmellMethodBean != null) {
-                        bulkDataTransferOnSlowNetworkList.add(bulkDataTransferOnSlowNetworkSmellMethodBean);
-                    }
-                    EarlyResourceBindingSmellMethodBean earlyResourceBindingSmellMethodBean = earlyResourceBindingAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
+                    EarlyResourceBindingSmellMethodBean earlyResourceBindingSmellMethodBean = earlyResourceBindingAnalyzer.analyzeMethod(methodBean, methodDeclaration, compilationUnit, sourceFile);
                     if (earlyResourceBindingSmellMethodBean != null) {
                         earlyResourceBindingList.add(earlyResourceBindingSmellMethodBean);
                     }
@@ -161,9 +145,6 @@ public class Analyzer {
             }
         }
         smellMethodList.addAll(durableWakelockList);
-        smellMethodList.addAll(dataTransmissionWithoutCompressionList);
-        smellMethodList.addAll(prohibitedDataTransferList);
-        smellMethodList.addAll(bulkDataTransferOnSlowNetworkList);
         smellMethodList.addAll(earlyResourceBindingList);
         return smellMethodList;
     }
