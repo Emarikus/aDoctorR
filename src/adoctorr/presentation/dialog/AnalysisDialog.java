@@ -21,8 +21,9 @@ public class AnalysisDialog extends JDialog {
 
     private Project project;
     private ArrayList<SmellMethodBean> smellMethodList;
-    private ArrayList<PackageBean> projectPackageList;
-    private HashMap<String, File> sourceFileMap;
+
+    private boolean analysisStarted;
+    private boolean analysisTerminated;
 
     /**
      * Default constructor and initializator of the dialog
@@ -36,9 +37,9 @@ public class AnalysisDialog extends JDialog {
         setTitle("aDoctor-R - Analysis");
 
         this.project = project;
-        projectPackageList = null;
-        sourceFileMap = null;
         smellMethodList = null;
+        analysisStarted = false;
+        analysisTerminated = false;
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -63,13 +64,14 @@ public class AnalysisDialog extends JDialog {
 
         // Thread that manage the real analysis
         analysisDialog.analysisThread = new AnalysisThread(project, analysisDialog);
+        analysisDialog.analysisStarted = true;
         analysisDialog.analysisThread.start();
 
         // setVisibile(true) is blocking, that's why we use a Thread to start the real analysis
         analysisDialog.pack();
         analysisDialog.setVisible(true);
 
-        // Invoked at the end of the analysis thread
+        // Invoked at the end of the analysis thread or when the dialog is closed because the dispose() is executed
         analysisDialog.checkResults();
     }
 
@@ -79,12 +81,16 @@ public class AnalysisDialog extends JDialog {
 
     private void checkResults() {
         dispose();
-        if (smellMethodList != null) {
-            // If there is at least one smell, show the SmellDialog
-            SmellDialog.show(project, smellMethodList);
+        if (analysisStarted && analysisTerminated) {
+            if (smellMethodList != null) {
+                // If there is at least one smell, show the SmellDialog
+                SmellDialog.show(project, smellMethodList);
+            } else {
+                // There are no smell
+                NoSmellDialog.show(project);
+            }
         } else {
-            // There are no smell
-            NoSmellDialog.show(project);
+            //TODO: Show Aborted Dialog
         }
     }
 
@@ -102,7 +108,6 @@ public class AnalysisDialog extends JDialog {
         }
 
         void startAnalysis() {
-            System.out.println("Sono nel Thread e inizio le mie cose. Ci vorrà un po'...");
             Analyzer analyzer = new Analyzer();
             ArrayList<PackageBean> projectPackageList;
             try {
@@ -133,9 +138,8 @@ public class AnalysisDialog extends JDialog {
                                     }
 
                                     // Set all the results to the analysisDialog in a callback-like style
-                                    analysisDialog.projectPackageList = projectPackageList;
-                                    analysisDialog.sourceFileMap = sourceFileMap;
-                                    analysisDialog.smellMethodList = smellMethodList;   // The most important
+                                    analysisDialog.smellMethodList = smellMethodList;
+                                    analysisDialog.analysisTerminated = true;
 
                                     // Hides the analysis window, unlocking the thread blocked at the preceding setVisible(true)
                                     analysisDialog.setVisible(false);

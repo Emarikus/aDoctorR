@@ -131,9 +131,9 @@ public class Analyzer {
 
                 CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
                 for (MethodBean methodBean : classBean.getMethods()) {
-                    MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
+                    MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
 
-                    DurableWakelockSmellMethodBean durableWakelockSmellMethodBean = durableWakelockAnalyzer.analyzeMethod(methodBean, methodDeclaration, sourceFile);
+                    DurableWakelockSmellMethodBean durableWakelockSmellMethodBean = durableWakelockAnalyzer.analyzeMethod(methodBean, methodDeclaration, compilationUnit, sourceFile);
                     if (durableWakelockSmellMethodBean != null) {
                         durableWakelockList.add(durableWakelockSmellMethodBean);
                     }

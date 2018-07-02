@@ -19,7 +19,7 @@ public class FailureDialog extends JDialog {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonBack);
-        setTitle("aDoctor-R - Success");
+        setTitle("aDoctor-R - Failure");
 
         this.project = project;
         this.smellMethodList = smellMethodList;

@@ -4,6 +4,7 @@ import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.proposal.DurableWakelockProposalMethodBean;
 import adoctorr.application.bean.smell.SmellMethodBean;
 import beans.MethodBean;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -42,14 +43,16 @@ public class DurableWakelockRefactorer {
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
 
             // MethodDeclaration to be replaced
-            MethodDeclaration targetMethodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
+            MethodDeclaration targetMethodDeclaration = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
             if (targetMethodDeclaration == null) {
                 return false;
             } else {
                 // Refactoring phase
                 AST targetAST = compilationUnit.getAST();
                 ASTRewrite rewriter = ASTRewrite.create(targetAST);
+
                 rewriter.replace(targetMethodDeclaration, proposedMethodDeclaration, null);
+
                 // With JavaCore Options we keep the code format settings, so the \n
                 TextEdit edits = rewriter.rewriteAST(document, JavaCore.getDefaultOptions());
                 //TODO 5: Implementare uno stack di Undo

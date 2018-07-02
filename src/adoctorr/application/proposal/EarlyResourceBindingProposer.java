@@ -26,13 +26,10 @@ public class EarlyResourceBindingProposer {
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-            MethodDeclaration onCreateMethodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
+            MethodDeclaration onCreateMethodDeclaration = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
             if (onCreateMethodDeclaration == null) {
                 return null;
             } else {
-                //TODO: Implementare
-                ///////////////////////
-
                 Statement requestStatement = smellMethodBean.getRequestStatement();
                 // Precondition check
                 if (requestStatement == null) {
@@ -48,18 +45,18 @@ public class EarlyResourceBindingProposer {
 
                     // Only for public|protected void onResume()
                     boolean foundOnResume = false;
-                    MethodDeclaration onResumeMethodDeclaration = ASTUtilities.getMethodDeclarationFromName("onResume", compilationUnit);
-                    if (onResumeMethodDeclaration != null) {
-                        Type returnType = onResumeMethodDeclaration.getReturnType2();
+                    MethodDeclaration proposedOnResumeMethodDeclaration = ASTUtilities.getMethodDeclarationFromName("onResume", compilationUnit);
+                    if (proposedOnResumeMethodDeclaration != null) {
+                        Type returnType = proposedOnResumeMethodDeclaration.getReturnType2();
                         if (returnType != null && returnType.toString().equals("void")) {
                             boolean found = false;
                             int i = 0;
-                            List modifierList = onResumeMethodDeclaration.modifiers();
+                            List modifierList = proposedOnResumeMethodDeclaration.modifiers();
                             int n = modifierList.size();
                             while (!found && i < n) {
                                 IExtendedModifier modifier = (IExtendedModifier) modifierList.get(i);
                                 if (modifier.toString().equals("public") || modifier.toString().equals("protected")) {
-                                    List parameters = onResumeMethodDeclaration.parameters();
+                                    List parameters = proposedOnResumeMethodDeclaration.parameters();
                                     if (parameters == null || parameters.size() == 0) {
                                         found = true;
                                     }
@@ -72,35 +69,35 @@ public class EarlyResourceBindingProposer {
 
                     // Create the new statement for onResume
                     ExpressionStatement requestExpressionStatementTEMP = (ExpressionStatement) requestStatement;
-                    ExpressionStatement requestExpressionStatement = ASTUtilities.getExpressionStatementInMethod(requestExpressionStatementTEMP.toString(), onCreateMethodDeclaration);
+                    ExpressionStatement requestExpressionStatement = ASTUtilities.getExpressionStatementFromContent(requestExpressionStatementTEMP.toString(), onCreateMethodDeclaration);
                     Expression requestExpression = requestExpressionStatement.getExpression();
+                    Statement newRequestStatement = targetAST.newExpressionStatement((Expression) ASTNode.copySubtree(targetAST, requestExpression));
 
                     // Remove from onCreate
-                    //TODO: Perchè non rimuove?
-                    Block requestBlock = ASTUtilities.getBlockInMethod(smellMethodBean.getRequestBlock().toString(), onCreateMethodDeclaration);
+                    Block requestBlock = ASTUtilities.getBlockFromContent(smellMethodBean.getRequestBlock().toString(), onCreateMethodDeclaration);
                     List<Statement> statementList = requestBlock.statements();
-                    statementList.remove(requestStatement);
+                    statementList.remove(requestExpressionStatement);
 
+                    MethodDeclaration actualOnResumeMethodDeclaration = null;
                     if (!foundOnResume) {
                         SimpleName onResumeIdentifier = targetAST.newSimpleName("onResume");
-
                         Modifier onResumePublicModifier = targetAST.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD);
-
                         Block onResumeBody = targetAST.newBlock();
 
-                        onResumeMethodDeclaration = targetAST.newMethodDeclaration();
-                        onResumeMethodDeclaration.setName(onResumeIdentifier);
-                        onResumeMethodDeclaration.modifiers().add(onResumePublicModifier);
-                        onResumeMethodDeclaration.setBody(onResumeBody);
+                        proposedOnResumeMethodDeclaration = targetAST.newMethodDeclaration();
+                        proposedOnResumeMethodDeclaration.setName(onResumeIdentifier);
+                        proposedOnResumeMethodDeclaration.modifiers().add(onResumePublicModifier);
+                        proposedOnResumeMethodDeclaration.setBody(onResumeBody);
+                    } else {
+                        actualOnResumeMethodDeclaration = (MethodDeclaration) ASTNode.copySubtree(targetAST, proposedOnResumeMethodDeclaration);
                     }
 
                     // Add at the bottom of the onResume
-                    Statement newRequestStatement = targetAST.newExpressionStatement((Expression) ASTNode.copySubtree(targetAST, requestExpression));
-                    List<Statement> onResumeStatementList = onResumeMethodDeclaration.getBody().statements();
+                    List<Statement> onResumeStatementList = proposedOnResumeMethodDeclaration.getBody().statements();
                     onResumeStatementList.add(newRequestStatement);
 
                     if (!foundOnResume) {
-                        String onResumeMethodDeclarationString = onResumeMethodDeclaration.toString();
+                        String onResumeMethodDeclarationString = proposedOnResumeMethodDeclaration.toString();
                         proposedCodeToHighlightList.add(onResumeMethodDeclarationString);
                     } else {
                         proposedCodeToHighlightList.add(newRequestStatement.toString());
@@ -109,7 +106,8 @@ public class EarlyResourceBindingProposer {
                     EarlyResourceBindingProposalMethodBean proposalMethodBean = new EarlyResourceBindingProposalMethodBean();
                     proposalMethodBean.setSmellMethodBean(smellMethodBean);
                     proposalMethodBean.setProposedOnCreate(onCreateMethodDeclaration);
-                    proposalMethodBean.setProposedOnResume(onResumeMethodDeclaration);
+                    proposalMethodBean.setActualOnResume(actualOnResumeMethodDeclaration);
+                    proposalMethodBean.setProposedOnResume(proposedOnResumeMethodDeclaration);
                     proposalMethodBean.setActualCodeToHighlightList(actualCodeToHighlightList);
                     proposalMethodBean.setProposedCodeToHighlightList(proposedCodeToHighlightList);
                     return proposalMethodBean;

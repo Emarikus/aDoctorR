@@ -125,6 +125,15 @@ public class SmellDialog extends JDialog {
             String actualCode = smellMethodBean.getMethodBean().getTextContent();
             areaActualCode.setText(actualCode);
             areaActualCode.setCaretPosition(0);
+            Highlighter actualHighlighter = areaActualCode.getHighlighter();
+            actualHighlighter.removeAllHighlights();
+            ArrayList<String> actualCodeToHighlightList = proposalMethodBean.getActualCodeToHighlightList();
+            if (actualCodeToHighlightList != null && actualCodeToHighlightList.size() > 0) {
+                for (String actualCodeToHighlight : actualCodeToHighlightList) {
+                    int highlightIndex = actualCode.indexOf(actualCodeToHighlight);
+                    actualHighlighter.addHighlight(highlightIndex, highlightIndex + actualCodeToHighlight.length(), DefaultHighlighter.DefaultPainter);
+                }
+            }
 
             String proposedCode = "";
             int smellType = proposalMethodBean.getSmellMethodBean().getSmellType();
@@ -145,18 +154,9 @@ public class SmellDialog extends JDialog {
                 default:
                     break;
             }
+
             areaProposedCode.setText(proposedCode);
             areaProposedCode.setCaretPosition(0);
-
-            Highlighter actualHighlighter = areaActualCode.getHighlighter();
-            actualHighlighter.removeAllHighlights();
-            ArrayList<String> actualCodeToHighlightList = proposalMethodBean.getActualCodeToHighlightList();
-            if (actualCodeToHighlightList != null && actualCodeToHighlightList.size() > 0) {
-                for (String actualCodeToHighlight : actualCodeToHighlightList) {
-                    int highlightIndex = proposedCode.indexOf(actualCodeToHighlight);
-                    actualHighlighter.addHighlight(highlightIndex, highlightIndex + actualCodeToHighlight.length(), DefaultHighlighter.DefaultPainter);
-                }
-            }
             Highlighter proposedHighlighter = areaProposedCode.getHighlighter();
             proposedHighlighter .removeAllHighlights();
             ArrayList<String> proposedCodeToHighlightList = proposalMethodBean.getProposedCodeToHighlightList();

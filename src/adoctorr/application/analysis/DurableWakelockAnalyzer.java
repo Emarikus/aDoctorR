@@ -4,9 +4,7 @@ import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.smell.DurableWakelockSmellMethodBean;
 import adoctorr.application.bean.smell.SmellMethodBean;
 import beans.MethodBean;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,8 +12,13 @@ import java.util.List;
 
 public class DurableWakelockAnalyzer {
 
+    private static final String ACQUIRE_NAME = "acquire";
+    private static final String RELEASE_NAME = "release";
+    private static final String WAKELOCK_CLASS = "PowerManager.WakeLock";
+    private static final String ACQUIRE_ARGUMENT_TYPE = "int";
+
     // Warning: Source code with method-level compile error and accents might give problems in the methodDeclaration fetch
-    public DurableWakelockSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, File sourceFile) {
+    public DurableWakelockSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, CompilationUnit compilationUnit, File sourceFile) {
         if (methodBean == null) {
             return null;
         } else if (methodDeclaration == null) {
@@ -28,36 +31,50 @@ public class DurableWakelockAnalyzer {
             Block acquireBlock = null;
             Statement acquireStatement = null;
 
+            // Look for the block with acquire() but not the release()
             ArrayList<Block> methodBlockList = ASTUtilities.getBlocksInMethod(methodDeclaration);
             int k = 0;
             while (!smellFound && k < methodBlockList.size()) {
                 Block block = methodBlockList.get(k);
                 List<Statement> statementList = block.statements();
+                k++; // In case of next iteration
 
                 int i = 0;
                 while (i < statementList.size()) {
                     Statement statement = statementList.get(i);
-                    String callerName = ASTUtilities.getCallerName(statement, "acquire");
+                    String callerName = ASTUtilities.getCallerName(statement, ACQUIRE_NAME);
                     if (callerName != null) {
-                        boolean releaseFound = false;
-                        int j = i + 1;
-                        while (!releaseFound && j < statementList.size()) {
-                            Statement statement2 = statementList.get(j);
-                            String callerName2 = ASTUtilities.getCallerName(statement2, "release");
-                            if (callerName2 != null && callerName.equals(callerName2)) {
-                                releaseFound = true;
+                        // Check type of the caller
+                        FieldDeclaration fieldDeclaration = ASTUtilities.getFieldDeclarationFromName(callerName, compilationUnit);
+                        VariableDeclarationStatement variableDeclarationStatement = ASTUtilities
+                                .getVariableDeclarationStatementFromName(callerName, methodDeclaration);
+                        if (fieldDeclaration != null && fieldDeclaration.getType().toString().equals(WAKELOCK_CLASS)
+                                || variableDeclarationStatement != null && variableDeclarationStatement.getType().toString().equals(WAKELOCK_CLASS)) {
+
+                            // Check if the arguments of the acquire() are absent
+                            List arguments = ASTUtilities.getArguments(statement);
+                            if (arguments == null || arguments.size() == 0) {
+                                // Look for corresponding release
+                                boolean releaseFound = false;
+                                int j = i + 1;
+                                while (!releaseFound && j < statementList.size()) {
+                                    Statement statement2 = statementList.get(j);
+                                    String callerName2 = ASTUtilities.getCallerName(statement2, RELEASE_NAME);
+                                    if (callerName2 != null && callerName.equals(callerName2)) {
+                                        releaseFound = true;
+                                    }
+                                    j++;
+                                }
+                                if (!releaseFound) {
+                                    smellFound = true;
+                                    acquireBlock = block;
+                                    acquireStatement = statement;
+                                }
                             }
-                            j++;
-                        }
-                        if (!releaseFound) {
-                            smellFound = true;
-                            acquireBlock = block;
-                            acquireStatement = statement;
                         }
                     }
                     i++;
                 }
-                k++;
             }
             if (smellFound) {
                 DurableWakelockSmellMethodBean smellMethodBean = new DurableWakelockSmellMethodBean();
@@ -73,63 +90,4 @@ public class DurableWakelockAnalyzer {
             }
         }
     }
-
-    /*
-    public DurableWakelockSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, File sourceFile) {
-        if (methodBean == null) {
-            return null;
-        } else if (methodDeclaration == null) {
-            return null;
-        } else if (sourceFile == null) {
-            return null;
-        } else {
-            String wakelockName = "";
-            String methodContent = methodDeclaration.toString();
-            // Regex to get all the acquire()
-            Pattern acquireRegex = Pattern.compile("(.*)acquire(\\s*)\\(\\)", Pattern.MULTILINE);
-            Matcher acquireMatcher = acquireRegex.matcher(methodContent);
-
-            boolean smellFound = false;
-            while (!smellFound && acquireMatcher.find()) {
-                String matchingString = acquireMatcher.group();
-                wakelockName = matchingString.substring(0, matchingString.indexOf(".")).replaceAll("\\s+", "");
-
-                // Look for the release of the same wakelock
-                Pattern releaseRegex = Pattern.compile(wakelockName + "\\.release(\\s*)\\(\\)", Pattern.MULTILINE);
-                Matcher releaseMatcher = releaseRegex.matcher(methodContent);
-                // If the corresponding release is not found
-                if (!releaseMatcher.find()) {
-                    smellFound = true;
-                } else {
-                    // there are some corresponding release in the method
-                    int acquireStart = acquireMatcher.start();
-                    // repeat for every corresponding release: checking if there is no one located after the acquire
-                    boolean foundAfter = false;
-                    do {
-                        int releaseStart = releaseMatcher.start();
-                        if (releaseStart > acquireStart) {
-                            foundAfter = true;
-                        }
-                    }
-                    while (!foundAfter && releaseMatcher.find());
-                    smellFound = !foundAfter;
-                }
-            }
-            if (smellFound) {
-                String acquireString = wakelockName + ".acquire()";
-                MethodInvocation acquireMethodInvocation = ASTUtilities.getMethodInvocationInMethod(methodDeclaration, acquireString);
-
-                DurableWakelockSmellMethodBean smellMethodBean = new DurableWakelockSmellMethodBean();
-                smellMethodBean.setMethodBean(methodBean);
-                smellMethodBean.setResolved(false);
-                smellMethodBean.setSourceFile(sourceFile);
-                smellMethodBean.setSmellType(SmellMethodBean.DURABLE_WAKELOCK);
-                smellMethodBean.setAcquireMethodInvocation(acquireMethodInvocation);
-                return smellMethodBean;
-            } else {
-                return null;
-            }
-        }
-    }
-    */
 }

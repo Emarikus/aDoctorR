@@ -4,6 +4,7 @@ import adoctorr.application.bean.proposal.ProposalMethodBean;
 import adoctorr.application.bean.smell.SmellMethodBean;
 import adoctorr.application.refactoring.Refactorer;
 import com.intellij.ide.SaveAndSyncHandlerImpl;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import org.eclipse.jface.text.BadLocationException;
@@ -77,6 +78,13 @@ public class RefactoringDialog extends JDialog {
 
         if (result) {
             proposalMethodBean.getSmellMethodBean().setResolved(true);
+
+            // Updates the editor with the changes made to the files
+            com.intellij.openapi.editor.Document[] documents = FileDocumentManager.getInstance().getUnsavedDocuments();
+            for (com.intellij.openapi.editor.Document document1 : documents) {
+                FileDocumentManager.getInstance().reloadFromDisk(document1);
+            }
+
             SuccessDialog.show(project);
         } else {
             FailureDialog.show(project, smellMethodList);

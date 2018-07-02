@@ -26,7 +26,7 @@ public class DurableWakelockProposer {
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-            MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromBean(methodBean, compilationUnit);
+            MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
             if (methodDeclaration == null) {
                 return null;
             } else {
@@ -50,7 +50,7 @@ public class DurableWakelockProposer {
                     ExpressionStatement releaseExpressionStatement = targetAST.newExpressionStatement(releaseMethodInvocation);
 
                     // If the scope is the method, then add it to the end of the method
-                    Block acquireBlock = ASTUtilities.getBlockInMethod(smellMethodBean.getAcquireBlock().toString(), methodDeclaration);
+                    Block acquireBlock = ASTUtilities.getBlockFromContent(smellMethodBean.getAcquireBlock().toString(), methodDeclaration);
                     List<Statement> statementList = acquireBlock.statements();
                     statementList.add(releaseExpressionStatement);
 

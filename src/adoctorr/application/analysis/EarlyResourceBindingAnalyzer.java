@@ -12,6 +12,12 @@ import java.util.List;
 
 public class EarlyResourceBindingAnalyzer {
 
+    private static final String ONCREATE_NAME = "onCreate";
+    private static final String ONCREATE_TYPE = "void";
+    private static final String ONCREATE_SCOPE1 = "public";
+    private static final String ONCREATE_SCOPE2 = "protected";
+    private static final String ONCREATE_ARGUMENT_TYPE = "Bundle";
+    private static final String GPS_REQUEST_METHOD_NAME = "requestLocationUpdates";
 
     // Warning: Source code with method-level compile error and accents might give problems in the methodDeclaration fetch
     public EarlyResourceBindingSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, CompilationUnit compilationUnit, File sourceFile) {
@@ -23,11 +29,11 @@ public class EarlyResourceBindingAnalyzer {
             return null;
         } else {
             // Only for public|protected void onCreate(Bundle)
-            if (!methodDeclaration.getName().toString().equals("onCreate")) {
+            if (!methodDeclaration.getName().toString().equals(ONCREATE_NAME)) {
                 return null;
             } else {
                 Type returnType = methodDeclaration.getReturnType2();
-                if (returnType == null && !returnType.toString().equals("void")) {
+                if (returnType == null && !returnType.toString().equals(ONCREATE_TYPE)) {
                     return null;
                 } else {
                     boolean found = false;
@@ -36,12 +42,12 @@ public class EarlyResourceBindingAnalyzer {
                     int n = modifierList.size();
                     while (!found && i < n) {
                         IExtendedModifier modifier = (IExtendedModifier) modifierList.get(i);
-                        if (modifier.toString().equals("public") || modifier.toString().equals("protected")) {
+                        if (modifier.toString().equals(ONCREATE_SCOPE1) || modifier.toString().equals(ONCREATE_SCOPE2)) {
                             List parameters = methodDeclaration.parameters();
                             if (parameters != null && parameters.size() > 0) {
                                 SingleVariableDeclaration parameter = (SingleVariableDeclaration) parameters.get(0);
                                 Type parameterType = parameter.getType();
-                                if (parameterType != null && parameterType.toString().equals("Bundle")) {
+                                if (parameterType != null && parameterType.toString().equals(ONCREATE_ARGUMENT_TYPE)) {
                                     found = true;
                                 }
                             }
@@ -64,9 +70,9 @@ public class EarlyResourceBindingAnalyzer {
                             int j = 0;
                             while (!smellFound && j < statementList.size()) {
                                 Statement statement = statementList.get(j);
-                                String callerName = ASTUtilities.getCallerName(statement, "requestLocationUpdates");
+                                String callerName = ASTUtilities.getCallerName(statement, GPS_REQUEST_METHOD_NAME);
                                 if (callerName != null) {
-                                    FieldDeclaration fieldDeclaration = ASTUtilities.getFieldDeclarationInClass(callerName, compilationUnit);
+                                    FieldDeclaration fieldDeclaration = ASTUtilities.getFieldDeclarationFromName(callerName, compilationUnit);
                                     if (fieldDeclaration != null) {
                                         smellFound = true;
                                         requestBlock = block;
