@@ -3,6 +3,7 @@ package adoctorr.presentation.dialog;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 
 public class SuccessDialog extends JDialog {
@@ -15,6 +16,11 @@ public class SuccessDialog extends JDialog {
     private SuccessDialog(Project project) {
         setContentPane(contentPane);
         setModal(true);
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Dimension screenSize = toolkit.getScreenSize();
+        int x = (screenSize.width - getWidth()) / 3;
+        int y = (screenSize.height - getHeight()) / 4;
+        setLocation(x, y);
         getRootPane().setDefaultButton(buttonAnalyze);
         setTitle("aDoctor-R - Success");
 

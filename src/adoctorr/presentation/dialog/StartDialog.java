@@ -3,6 +3,7 @@ package adoctorr.presentation.dialog;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -26,6 +27,11 @@ public class StartDialog extends JDialog {
         // Leave them as they are
         setContentPane(contentPane);
         setModal(true);
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Dimension screenSize = toolkit.getScreenSize();
+        int x = (screenSize.width - getWidth()) / 3;
+        int y = (screenSize.height - getHeight()) / 4;
+        setLocation(x, y);
         //Pressing Enter means clicking buttonStart
         getRootPane().setDefaultButton(buttonStart);
         setTitle("aDoctor-R");

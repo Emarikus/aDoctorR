@@ -6,8 +6,6 @@ import java.io.File;
 
 public class SmellMethodBean {
     public static final int DURABLE_WAKELOCK = 1;
-    public static final int PROHIBITED_DATA_TRANSFER = 2;
-    public static final int BULK_DATA_TRANSFER_ON_SLOW_NETWORK = 3;
     public static final int EARLY_RESOURCE_BINDING = 4;
 
     private MethodBean methodBean;
@@ -22,10 +20,6 @@ public class SmellMethodBean {
         switch (smellType) {
             case DURABLE_WAKELOCK:
                 return "Durable Wakelock";
-            case PROHIBITED_DATA_TRANSFER:
-                return "Prohibited Data Transfer";
-            case BULK_DATA_TRANSFER_ON_SLOW_NETWORK:
-                return "Bulk Data Transfer On Slow Network";
             case EARLY_RESOURCE_BINDING:
                 return "Early Resource Binding";
             default:

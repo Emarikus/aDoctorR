@@ -10,6 +10,7 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import org.eclipse.jface.text.BadLocationException;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -29,6 +30,11 @@ public class RefactoringDialog extends JDialog {
     private RefactoringDialog(ProposalMethodBean proposalMethodBean, Project project, ArrayList<SmellMethodBean> smellMethodList) {
         setContentPane(contentPane);
         setModal(true);
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Dimension screenSize = toolkit.getScreenSize();
+        int x = (screenSize.width - getWidth()) / 3;
+        int y = (screenSize.height - getHeight()) / 4;
+        setLocation(x, y);
         setTitle("aDoctor-R - Refactoring");
 
         this.proposalMethodBean = proposalMethodBean;

@@ -4,6 +4,7 @@ import adoctorr.application.bean.smell.SmellMethodBean;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
@@ -18,6 +19,11 @@ public class FailureDialog extends JDialog {
     private FailureDialog(Project project, ArrayList<SmellMethodBean> smellMethodList) {
         setContentPane(contentPane);
         setModal(true);
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Dimension screenSize = toolkit.getScreenSize();
+        int x = (screenSize.width - getWidth()) / 3;
+        int y = (screenSize.height - getHeight()) / 4;
+        setLocation(x, y);
         getRootPane().setDefaultButton(buttonBack);
         setTitle("aDoctor-R - Failure");
 

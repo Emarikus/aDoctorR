@@ -15,12 +15,13 @@ public class AboutDialog extends JDialog {
     private AboutDialog(Project project) {
         setContentPane(contentPane);
         setModal(true);
-        final Toolkit toolkit = Toolkit.getDefaultToolkit();
-        final Dimension screenSize = toolkit.getScreenSize();
-        final int x = (screenSize.width - getWidth()) / 3;
-        final int y = (screenSize.height - getHeight()) / 3;
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Dimension screenSize = toolkit.getScreenSize();
+        int x = (screenSize.width - getWidth()) / 3;
+        int y = (screenSize.height - getHeight()) / 3;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonBack);
+        setTitle("aDoctor-R - About");
 
         this.project = project;
 

@@ -14,6 +14,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -22,15 +23,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class SmellDialog extends JDialog {
+
+    private static final String DURABLE_WAKELOCK_DESCRIPTION = "Durable Wakelock is present when there is a " +
+            "PowerManager.WakeLock instance that calls an acquire() without setting a timeout or without calling the " +
+            "corresponding release()";
+    private static final String EARLY_RESOURCE_BINDING_DESCRIPTION = "Early Resource Binding is present when an " +
+            "Android system service is used in the onCreate(Bundle) method of an Activity subclass.";
+
     private JPanel contentPane;
 
     private JList<String> listSmell;
 
     private JLabel labelSmellName;
+    private JLabel labelIcon;
 
     private JTextArea areaActualCode;
     private JTextArea areaProposedCode;
-    private JLabel labelMethodName;
+    private JLabel labelClassName;
     private JButton buttonApply;
     private JButton buttonQuit;
 
@@ -43,8 +52,16 @@ public class SmellDialog extends JDialog {
     private SmellDialog(Project project, ArrayList<SmellMethodBean> smellMethodList) {
         setContentPane(contentPane);
         setModal(true);
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Dimension screenSize = toolkit.getScreenSize();
+        int x = (screenSize.width - getWidth()) / 8;
+        int y = (screenSize.height - getHeight()) / 12;
+        setLocation(x, y);
         getRootPane().setDefaultButton(buttonApply);
         setTitle("aDoctor-R - Smells' list");
+
+        areaActualCode.setPreferredSize(null);
+        areaProposedCode.setPreferredSize(null);
 
         this.project = project;
         this.smellMethodList = smellMethodList;
@@ -118,10 +135,27 @@ public class SmellDialog extends JDialog {
 
             String className = smellMethodBean.getMethodBean().getBelongingClass().getName();
             String packageName = smellMethodBean.getMethodBean().getBelongingClass().getBelongingPackage();
-            String methodFullName = packageName + "." + className + "." + smellMethodBean.getMethodBean().getName();
+            String classFullName = packageName + "." + className;
             labelSmellName.setText(SmellMethodBean.getSmellName(smellMethodBean.getSmellType()));
-            labelMethodName.setText(methodFullName);
+            labelClassName.setText(classFullName);
 
+            int smellType = smellMethodBean.getSmellType();
+
+            // Smell Description
+            switch (smellType) {
+                case SmellMethodBean.DURABLE_WAKELOCK: {
+                    labelIcon.setToolTipText(DURABLE_WAKELOCK_DESCRIPTION);
+                    break;
+                }
+                case SmellMethodBean.EARLY_RESOURCE_BINDING: {
+                    labelIcon.setToolTipText(EARLY_RESOURCE_BINDING_DESCRIPTION);
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            // Actual Code area
             String actualCode = smellMethodBean.getMethodBean().getTextContent();
             areaActualCode.setText(actualCode);
             areaActualCode.setCaretPosition(0);
@@ -135,8 +169,8 @@ public class SmellDialog extends JDialog {
                 }
             }
 
+            // Proposed Code Area
             String proposedCode = "";
-            int smellType = proposalMethodBean.getSmellMethodBean().getSmellType();
             switch (smellType) {
                 case SmellMethodBean.DURABLE_WAKELOCK: {
                     DurableWakelockProposalMethodBean durableWakelockProposalMethodBean = (DurableWakelockProposalMethodBean) proposalMethodBean;
@@ -148,22 +182,21 @@ public class SmellDialog extends JDialog {
                     EarlyResourceBindingProposalMethodBean earlyResourceBindingProposalMethodBean = (EarlyResourceBindingProposalMethodBean) proposalMethodBean;
                     MethodDeclaration proposedOnCreate = earlyResourceBindingProposalMethodBean.getProposedOnCreate();
                     MethodDeclaration proposedOnResume = earlyResourceBindingProposalMethodBean.getProposedOnResume();
-                    proposedCode= proposedOnCreate.toString() + "\n" + proposedOnResume.toString();
+                    proposedCode = proposedOnCreate.toString() + "\n" + proposedOnResume.toString();
                     break;
                 }
                 default:
                     break;
             }
-
             areaProposedCode.setText(proposedCode);
             areaProposedCode.setCaretPosition(0);
             Highlighter proposedHighlighter = areaProposedCode.getHighlighter();
-            proposedHighlighter .removeAllHighlights();
+            proposedHighlighter.removeAllHighlights();
             ArrayList<String> proposedCodeToHighlightList = proposalMethodBean.getProposedCodeToHighlightList();
             if (proposedCodeToHighlightList != null && proposedCodeToHighlightList.size() > 0) {
                 for (String proposedCodeToHighlight : proposedCodeToHighlightList) {
                     int highlightIndex = proposedCode.indexOf(proposedCodeToHighlight);
-                    proposedHighlighter .addHighlight(highlightIndex, highlightIndex + proposedCodeToHighlight.length(), DefaultHighlighter.DefaultPainter);
+                    proposedHighlighter.addHighlight(highlightIndex, highlightIndex + proposedCodeToHighlight.length(), DefaultHighlighter.DefaultPainter);
                 }
             }
 

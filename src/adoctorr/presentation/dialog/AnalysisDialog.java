@@ -7,6 +7,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -34,6 +35,11 @@ public class AnalysisDialog extends JDialog {
         // Leave them as they are
         setContentPane(contentPane);
         setModal(true);
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Dimension screenSize = toolkit.getScreenSize();
+        int x = (screenSize.width - getWidth()) / 3;
+        int y = (screenSize.height - getHeight()) / 4;
+        setLocation(x, y);
         setTitle("aDoctor-R - Analysis");
 
         this.project = project;
@@ -90,7 +96,8 @@ public class AnalysisDialog extends JDialog {
                 NoSmellDialog.show(project);
             }
         } else {
-            //TODO: Show Aborted Dialog
+            // Aborted
+            AbortDialog.show(project);
         }
     }
 

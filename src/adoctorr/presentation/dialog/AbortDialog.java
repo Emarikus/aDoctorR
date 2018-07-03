@@ -6,20 +6,31 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class NoSmellDialog extends JDialog {
+public class AbortDialog extends JDialog {
     private JPanel contentPane;
+    private JButton buttonAnalyze;
     private JButton buttonQuit;
 
-    private NoSmellDialog() {
+    private Project project;
+
+    private AbortDialog(Project project) {
         setContentPane(contentPane);
         setModal(true);
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
         int x = (screenSize.width - getWidth()) / 3;
-        int y = (screenSize.height - getHeight()) / 4;
+        int y = (screenSize.height - getHeight()) / 3;
         setLocation(x, y);
-        getRootPane().setDefaultButton(buttonQuit);
-        setTitle("aDoctor-R - Congratulations");
+        getRootPane().setDefaultButton(buttonAnalyze);
+        setTitle("aDoctor-R - Aborted");
+
+        this.project = project;
+
+        buttonAnalyze.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                onStartAnalysis();
+            }
+        });
 
         buttonQuit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -27,7 +38,7 @@ public class NoSmellDialog extends JDialog {
             }
         });
 
-        // call onQuit() when cross is clicked
+        // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -35,7 +46,7 @@ public class NoSmellDialog extends JDialog {
             }
         });
 
-        // call onQuit() on ESCAPE
+        // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 onQuit();
@@ -43,14 +54,19 @@ public class NoSmellDialog extends JDialog {
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
 
-    private void onQuit() {
-        dispose();
+    public static void show(Project project) {
+        AbortDialog abortDialog = new AbortDialog(project);
+
+        abortDialog.pack();
+        abortDialog.setVisible(true);
     }
 
-    public static void show(Project project) {
-        NoSmellDialog noSmellDialog = new NoSmellDialog();
+    private void onStartAnalysis() {
+        dispose();
+        AnalysisDialog.show(project);
+    }
 
-        noSmellDialog.pack();
-        noSmellDialog.setVisible(true);
+    private void onQuit() {
+        dispose();
     }
 }
