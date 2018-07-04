@@ -30,10 +30,12 @@ public class StartDialog extends JDialog {
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
         int x = (screenSize.width - getWidth()) / 3;
-        int y = (screenSize.height - getHeight()) / 4;
+        int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
+
         //Pressing Enter means clicking buttonStart
         getRootPane().setDefaultButton(buttonStart);
+
         setTitle("aDoctor-R");
 
         this.project = project;
@@ -107,6 +109,7 @@ public class StartDialog extends JDialog {
     private void onQuit() {
         dispose();
     }
+
 
     private void onAbout() {
         dispose();

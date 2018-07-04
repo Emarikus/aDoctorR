@@ -4,11 +4,30 @@ import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class AboutDialog extends JDialog {
+
+    private static final String ABOUT = "" +
+            "<html> " +
+                "<div style=\"text-align:center\">" +
+                    "aDoctor-R is a code smell identification and refactoring plugin developed<br>" +
+                    "by Emanuele Iannone at Università degli Studi di Salerno.<br>" +
+                    "Please, feel free to report any bugs or suggestions at emaiannone@hotmail.it<br>" +
+                    "All icons used in this plugin are made by " +
+                    "<a href=\"https://www.flaticon.com/authors/good-ware\" title=\"Good Ware\">Good Ware</a> " +
+                    "from <a href=\"https://www.flaticon.com/\" title=\"Flaticon\">www.flaticon.com</a> is " +
+                    "licensed by <a href=\"http://creativecommons.org/licenses/by/3.0/\" " +
+                   "title=\"Creative Commons BY 3.0\" target=\"_blank\">CC 3.0 BY</a>" +
+                "</div>" +
+            "</html>";
+
     private JPanel contentPane;
     private JButton buttonBack;
+    private JLabel labelAbout;
 
     private Project project;
 
@@ -17,13 +36,15 @@ public class AboutDialog extends JDialog {
         setModal(true);
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
-        int x = (screenSize.width - getWidth()) / 3;
-        int y = (screenSize.height - getHeight()) / 3;
+        int x = (screenSize.width - getWidth()) / 4;
+        int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonBack);
         setTitle("aDoctor-R - About");
 
         this.project = project;
+
+        labelAbout.setText(ABOUT);
 
         buttonBack.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -35,16 +56,9 @@ public class AboutDialog extends JDialog {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                onBack();
+                onQuit();
             }
         });
-
-        // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onBack();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
 
     public static void show(Project project) {
@@ -58,5 +72,9 @@ public class AboutDialog extends JDialog {
         // add your code here if necessary
         dispose();
         StartDialog.show(project);
+    }
+
+    private void onQuit() {
+        dispose();
     }
 }

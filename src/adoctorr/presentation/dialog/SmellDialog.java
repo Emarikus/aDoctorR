@@ -54,8 +54,8 @@ public class SmellDialog extends JDialog {
         setModal(true);
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
-        int x = (screenSize.width - getWidth()) / 8;
-        int y = (screenSize.height - getHeight()) / 12;
+        int x = (screenSize.width - getWidth()) / 9;
+        int y = (screenSize.height - getHeight()) / 16;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonApply);
         setTitle("aDoctor-R - Smells' list");
@@ -74,14 +74,22 @@ public class SmellDialog extends JDialog {
             }
         }
 
-        //TODO (priorità bassa): Migliorare l'estetica, sebbene funzioni
+        // The smells' list
         DefaultListModel<String> listSmellModel = (DefaultListModel<String>) listSmell.getModel();
         for (SmellMethodBean smellMethodBean : unresolvedSmellMethodList) {
             String methodName = smellMethodBean.getMethodBean().getName();
             int smellType = smellMethodBean.getSmellType();
             String smellName = SmellMethodBean.getSmellName(smellType);
-
-            listSmellModel.addElement(methodName + "() - " + smellName);
+            String htmlContent = "" +
+                    "<html>" +
+                        "<p style=\"font-size:10px\">" +
+                            "<b>" + smellName + "</b>" +
+                        "</p>" +
+                        "<p style=\"font-size:9px\">" +
+                        "" + methodName + "" +
+                        "</p>" +
+                    "</html>";
+            listSmellModel.addElement(htmlContent);
         }
 
         listSmell.addListSelectionListener(new ListSelectionListener() {

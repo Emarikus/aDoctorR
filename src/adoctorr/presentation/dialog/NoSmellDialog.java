@@ -16,7 +16,7 @@ public class NoSmellDialog extends JDialog {
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
         int x = (screenSize.width - getWidth()) / 3;
-        int y = (screenSize.height - getHeight()) / 4;
+        int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonQuit);
         setTitle("aDoctor-R - Congratulations");
@@ -34,13 +34,6 @@ public class NoSmellDialog extends JDialog {
                 onQuit();
             }
         });
-
-        // call onQuit() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onQuit();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
 
     private void onQuit() {

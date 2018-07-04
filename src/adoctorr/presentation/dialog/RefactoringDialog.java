@@ -33,7 +33,7 @@ public class RefactoringDialog extends JDialog {
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
         int x = (screenSize.width - getWidth()) / 3;
-        int y = (screenSize.height - getHeight()) / 4;
+        int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         setTitle("aDoctor-R - Refactoring");
 
@@ -44,7 +44,7 @@ public class RefactoringDialog extends JDialog {
         String fileName = proposalMethodBean.getSmellMethodBean().getSourceFile().getName();
         String methodName = proposalMethodBean.getSmellMethodBean().getMethodBean().getName();
 
-        labelMethodFileName.setText("in the method " + methodName + " in file " + fileName);
+        labelMethodFileName.setText("to the method " + methodName + " in file " + fileName);
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
