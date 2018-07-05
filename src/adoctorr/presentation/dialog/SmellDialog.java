@@ -55,7 +55,7 @@ public class SmellDialog extends JDialog {
         int y = (screenSize.height - getHeight()) / 16;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonApply);
-        setTitle("aDoctor-R - Smells' list");
+        setTitle("aDoctor - Smells' list");
 
         areaActualCode.setPreferredSize(null);
         areaProposedCode.setPreferredSize(null);

@@ -22,7 +22,7 @@ public class AbortDialog extends JDialog {
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonAnalyze);
-        setTitle("aDoctor-R - Aborted");
+        setTitle("aDoctor - Aborted");
 
         this.project = project;
 

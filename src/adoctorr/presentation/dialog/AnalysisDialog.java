@@ -43,7 +43,7 @@ public class AnalysisDialog extends JDialog {
         int x = (screenSize.width - getWidth()) * 2 / 5;
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
-        setTitle("aDoctor-R - Analysis");
+        setTitle("aDoctor - Analysis");
 
         this.project = project;
         smellMethodList = null;
@@ -125,9 +125,6 @@ public class AnalysisDialog extends JDialog {
 
             startAnalysis();
 
-            analysisDialog.analysisTerminated = true;
-            System.out.println("Analisi terminata con successo");
-
             // Disposing the analysis window unlocks UI thread blocked at the preceding setVisible(true)
             analysisDialog.dispose();
 
@@ -165,6 +162,9 @@ public class AnalysisDialog extends JDialog {
                                         smellMethodList = analyzer.analyze(projectPackageList, sourceFileMap);
                                         if (smellMethodList == null || smellMethodList.size() <= 0) {
                                             smellMethodList = null;
+                                        } else {
+                                            analysisDialog.analysisTerminated = true;
+                                            System.out.println("Analisi terminata con successo");
                                         }
                                     } catch (IOException e3) {
                                         smellMethodList = null;

@@ -59,7 +59,7 @@
             </constraints>
             <properties>
               <font size="16"/>
-              <text value="aDoctor-R failed to refactor, and it doesn't know why :("/>
+              <text value="aDoctor failed to refactor, and it doesn't know why :("/>
             </properties>
           </component>
         </children>

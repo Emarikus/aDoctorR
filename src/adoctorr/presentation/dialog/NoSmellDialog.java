@@ -19,7 +19,7 @@ public class NoSmellDialog extends JDialog {
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonQuit);
-        setTitle("aDoctor-R - Congratulations");
+        setTitle("aDoctor - Congratulations");
 
         buttonQuit.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

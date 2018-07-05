@@ -102,7 +102,7 @@
             </constraints>
             <properties>
               <font size="20"/>
-              <text value="Welcome to aDoctor-R"/>
+              <text value="Welcome to aDoctor"/>
             </properties>
           </component>
         </children>

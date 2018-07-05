@@ -25,7 +25,7 @@ public class FailureDialog extends JDialog {
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonBack);
-        setTitle("aDoctor-R - Failure");
+        setTitle("aDoctor - Failure");
 
         this.project = project;
         this.smellMethodList = smellMethodList;

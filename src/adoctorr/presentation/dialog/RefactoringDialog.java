@@ -35,7 +35,7 @@ public class RefactoringDialog extends JDialog {
         int x = (screenSize.width - getWidth()) / 3;
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
-        setTitle("aDoctor-R - Refactoring");
+        setTitle("aDoctor - Refactoring");
 
         this.proposalMethodBean = proposalMethodBean;
         this.project = project;

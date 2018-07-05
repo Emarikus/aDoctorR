@@ -62,7 +62,7 @@
             </constraints>
             <properties>
               <font size="14"/>
-              <text value="aDoctor-R is not able to do anything. Have a nice day!"/>
+              <text value="aDoctor is not able to do anything. Have a nice day!"/>
             </properties>
           </component>
         </children>

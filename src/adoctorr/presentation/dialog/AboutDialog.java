@@ -14,7 +14,7 @@ public class AboutDialog extends JDialog {
     private static final String ABOUT = "" +
             "<html> " +
                 "<div style=\"text-align:center\">" +
-                    "aDoctor-R is a code smell identification and refactoring plugin developed<br>" +
+                    "This version of aDoctor is a code smell identification and refactoring plugin developed<br>" +
                     "by Emanuele Iannone at Università degli Studi di Salerno.<br>" +
                     "Please, feel free to report any bugs or suggestions at emaiannone@hotmail.it<br>" +
                     "All icons used in this plugin are made by " +
@@ -40,7 +40,7 @@ public class AboutDialog extends JDialog {
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonBack);
-        setTitle("aDoctor-R - About");
+        setTitle("aDoctor - About");
 
         this.project = project;
 

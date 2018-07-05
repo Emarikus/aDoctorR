@@ -36,7 +36,7 @@
                 </constraints>
                 <properties>
                   <font size="18"/>
-                  <text value="aDoctor-R is analyzing your Java files..."/>
+                  <text value="aDoctor is analyzing your Java files..."/>
                 </properties>
               </component>
             </children>

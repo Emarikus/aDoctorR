@@ -36,7 +36,7 @@
                 </constraints>
                 <properties>
                   <font size="16"/>
-                  <text value="aDoctor-R is applying the refactoring"/>
+                  <text value="aDoctor is applying the refactoring"/>
                 </properties>
               </component>
               <component id="b8302" class="javax.swing.JLabel" binding="labelMethodFileName">

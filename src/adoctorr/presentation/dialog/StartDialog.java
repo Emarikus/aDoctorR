@@ -36,7 +36,7 @@ public class StartDialog extends JDialog {
         //Pressing Enter means clicking buttonStart
         getRootPane().setDefaultButton(buttonStart);
 
-        setTitle("aDoctor-R");
+        setTitle("aDoctor");
 
         this.project = project;
 

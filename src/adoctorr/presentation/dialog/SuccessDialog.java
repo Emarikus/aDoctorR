@@ -25,7 +25,7 @@ public class SuccessDialog extends JDialog {
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonAnalyze);
-        setTitle("aDoctor-R - Success");
+        setTitle("aDoctor - Success");
 
         this.project = project;
 

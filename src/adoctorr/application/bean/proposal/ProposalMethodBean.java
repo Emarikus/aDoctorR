@@ -10,7 +10,7 @@ public class ProposalMethodBean {
     private ArrayList<String> actualCodeToHighlightList;
     private ArrayList<String> proposedCodeToHighlightList;
 
-    public ProposalMethodBean() {
+    ProposalMethodBean() {
     }
 
     public ArrayList<String> getActualCodeToHighlightList() {

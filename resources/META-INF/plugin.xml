@@ -5,7 +5,7 @@
   <vendor email="emaiannone@hotmail.it">Emanuele Iannone</vendor>
 
   <description><![CDATA[
-      Plugin per refactoring di energy smell per Android.
+      Plugin for Android energy smell identification and refactoring.
     ]]></description>
 
   <change-notes><![CDATA[
@@ -28,9 +28,9 @@
 
   <actions>
     <!-- Add your actions here -->
-      <action id="start_action" class="adoctorr.presentation.action.StartAction" text="aDoctor-R"
-              description="Run the aDoctor-R plugin">
-          <add-to-group group-id="AnalyzeMenu" anchor="last"/>
+      <action id="start_action" class="adoctorr.presentation.action.StartAction" text="aDoctor"
+              description="Run the aDoctor plugin">
+          <add-to-group group-id="RefactoringMenu" anchor="last"/>
       </action>
   </actions>
 
