@@ -66,23 +66,22 @@ public class RefactoringDialog extends JDialog {
         // setVisibile(true) is blocking, that's why we use a Thread to start the real refatoring
         refactoringDialog.setVisible(true);
 
-        refactoringDialog.showSmellDialog();
+        refactoringDialog.showResults();
     }
 
 
     private void onExit() {
-        // add your code here if necessary
         dispose();
     }
 
-    private void showSmellDialog() {
-        dispose();
-
+    private void showResults() {
         // Refreshes the Editor in order to reflect the changes to the files
         SaveAndSyncHandlerImpl.getInstance().refreshOpenFiles();
         VirtualFileManager.getInstance().refreshWithoutFileWatcher(false);
 
-        if (result) {
+        if (!result) {
+            FailureDialog.show(project, smellMethodList);
+        } else {
             proposalMethodBean.getSmellMethodBean().setResolved(true);
 
             // Updates the editor with the changes made to the files
@@ -92,8 +91,6 @@ public class RefactoringDialog extends JDialog {
             }
 
             SuccessDialog.show(project);
-        } else {
-            FailureDialog.show(project, smellMethodList);
         }
     }
 
@@ -107,7 +104,14 @@ public class RefactoringDialog extends JDialog {
         }
 
         public void run() {
+            System.out.println("Refactoring avviato");
+
             startRefactoring();
+
+            System.out.println("Refactoring terminato con successo");
+
+            // Disposing the analysis window unlocks UI thread blocked at the preceding setVisible(true)
+            refactoringDialog.dispose();
         }
 
         void startRefactoring() {
@@ -115,15 +119,14 @@ public class RefactoringDialog extends JDialog {
             boolean result;
             try {
                 result = refactorer.applyRefactoring(proposalMethodBean);
-                refactoringDialog.result = result;
-
-                // Hides the refactoring window, unlocking the thread blocked at the preceding setVisible(true)
-                refactoringDialog.setVisible(false);
             } catch (BadLocationException e1) {
+                result = false;
                 e1.printStackTrace();
             } catch (IOException e2) {
+                result = false;
                 e2.printStackTrace();
             }
+            refactoringDialog.result = result;
         }
     }
 }

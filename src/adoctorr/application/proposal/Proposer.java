@@ -4,15 +4,13 @@ import adoctorr.application.bean.proposal.ProposalMethodBean;
 import adoctorr.application.bean.smell.DurableWakelockSmellMethodBean;
 import adoctorr.application.bean.smell.EarlyResourceBindingSmellMethodBean;
 import adoctorr.application.bean.smell.SmellMethodBean;
-import com.intellij.openapi.project.Project;
 
 import java.io.IOException;
 
 public class Proposer {
-    private Project project;
 
-    public Proposer(Project project) {
-        this.project = project;
+    public Proposer() {
+
     }
 
     public ProposalMethodBean computeProposal(SmellMethodBean smellMethodBean) throws IOException {
@@ -36,8 +34,7 @@ public class Proposer {
                     return null;
             }
             return proposedMethodBean;
-        } else {
-            return null;
         }
+        return null;
     }
 }

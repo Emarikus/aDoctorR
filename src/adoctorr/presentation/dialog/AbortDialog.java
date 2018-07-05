@@ -18,7 +18,7 @@ public class AbortDialog extends JDialog {
         setModal(true);
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
-        int x = (screenSize.width - getWidth()) / 2;
+        int x = (screenSize.width - getWidth()) * 2 / 5;
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonAnalyze);

@@ -21,26 +21,16 @@ public class EarlyResourceBindingAnalyzer {
 
     // Warning: Source code with method-level compile error and accents might give problems in the methodDeclaration fetch
     public EarlyResourceBindingSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, CompilationUnit compilationUnit, File sourceFile) {
-        if (methodBean == null) {
-            return null;
-        } else if (methodDeclaration == null) {
-            return null;
-        } else if (sourceFile == null) {
-            return null;
-        } else {
+        if (methodBean != null && methodDeclaration != null && compilationUnit != null && sourceFile != null) {
             // Only for public|protected void onCreate(Bundle)
-            if (!methodDeclaration.getName().toString().equals(ONCREATE_NAME)) {
-                return null;
-            } else {
+            boolean onCreateFound = false;
+            if (methodDeclaration.getName().toString().equals(ONCREATE_NAME)) {
                 Type returnType = methodDeclaration.getReturnType2();
-                if (returnType == null && !returnType.toString().equals(ONCREATE_TYPE)) {
-                    return null;
-                } else {
-                    boolean found = false;
+                if (returnType != null && returnType.toString().equals(ONCREATE_TYPE)) {
                     List modifierList = methodDeclaration.modifiers();
                     int i = 0;
                     int n = modifierList.size();
-                    while (!found && i < n) {
+                    while (!onCreateFound && i < n) {
                         IExtendedModifier modifier = (IExtendedModifier) modifierList.get(i);
                         if (modifier.toString().equals(ONCREATE_SCOPE1) || modifier.toString().equals(ONCREATE_SCOPE2)) {
                             List parameters = methodDeclaration.parameters();
@@ -48,15 +38,14 @@ public class EarlyResourceBindingAnalyzer {
                                 SingleVariableDeclaration parameter = (SingleVariableDeclaration) parameters.get(0);
                                 Type parameterType = parameter.getType();
                                 if (parameterType != null && parameterType.toString().equals(ONCREATE_ARGUMENT_TYPE)) {
-                                    found = true;
+                                    onCreateFound = true;
                                 }
                             }
                         }
                         i++;
                     }
-                    if (!found) {
-                        return null;
-                    } else {
+                    if (onCreateFound) {
+                        // Look for the presence of the smell in the onCreate(Bundle)
                         boolean smellFound = false;
                         Block requestBlock = null;
                         Statement requestStatement = null;
@@ -65,7 +54,7 @@ public class EarlyResourceBindingAnalyzer {
                         int k = 0;
                         while (!smellFound && k < methodBlockList.size()) {
                             Block block = methodBlockList.get(k);
-                            List<Statement> statementList = block.statements();
+                            List<Statement> statementList = (List<Statement>) block.statements();
 
                             int j = 0;
                             while (!smellFound && j < statementList.size()) {
@@ -86,9 +75,7 @@ public class EarlyResourceBindingAnalyzer {
                             }
                             k++;
                         }
-                        if (!smellFound) {
-                            return null;
-                        } else {
+                        if (smellFound) {
                             EarlyResourceBindingSmellMethodBean smellMethodBean = new EarlyResourceBindingSmellMethodBean();
                             smellMethodBean.setMethodBean(methodBean);
                             smellMethodBean.setResolved(false);
@@ -102,5 +89,6 @@ public class EarlyResourceBindingAnalyzer {
                 }
             }
         }
+        return null;
     }
 }

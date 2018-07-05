@@ -18,24 +18,15 @@ public class EarlyResourceBindingProposer {
     }
 
     public EarlyResourceBindingProposalMethodBean computeProposal(EarlyResourceBindingSmellMethodBean smellMethodBean) throws IOException {
-        if (smellMethodBean == null) {
-            System.out.println("Errore precondizione");
-            return null;
-        } else {
+        if (smellMethodBean != null) {
             File sourceFile = smellMethodBean.getSourceFile();
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
             MethodDeclaration onCreateMethodDeclaration = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
-            if (onCreateMethodDeclaration == null) {
-                return null;
-            } else {
+            if (onCreateMethodDeclaration != null) {
                 Statement requestStatement = smellMethodBean.getRequestStatement();
-                // Precondition check
-                if (requestStatement == null) {
-                    return null;
-                } else {
-                    // All preconditions passed
+                if (requestStatement != null) {
                     AST targetAST = compilationUnit.getAST();
 
                     ArrayList<String> actualCodeToHighlightList = new ArrayList<>();
@@ -70,49 +61,52 @@ public class EarlyResourceBindingProposer {
                     // Create the new statement for onResume
                     ExpressionStatement requestExpressionStatementTEMP = (ExpressionStatement) requestStatement;
                     ExpressionStatement requestExpressionStatement = ASTUtilities.getExpressionStatementFromContent(requestExpressionStatementTEMP.toString(), onCreateMethodDeclaration);
-                    Expression requestExpression = requestExpressionStatement.getExpression();
-                    Statement newRequestStatement = targetAST.newExpressionStatement((Expression) ASTNode.copySubtree(targetAST, requestExpression));
+                    if (requestExpressionStatement != null) {
+                        Expression requestExpression = requestExpressionStatement.getExpression();
+                        Statement newRequestStatement = targetAST.newExpressionStatement((Expression) ASTNode.copySubtree(targetAST, requestExpression));
 
-                    // Remove from onCreate
-                    Block requestBlock = ASTUtilities.getBlockFromContent(smellMethodBean.getRequestBlock().toString(), onCreateMethodDeclaration);
-                    List<Statement> statementList = requestBlock.statements();
-                    statementList.remove(requestExpressionStatement);
+                        // Remove from onCreate
+                        Block requestBlock = ASTUtilities.getBlockFromContent(smellMethodBean.getRequestBlock().toString(), onCreateMethodDeclaration);
+                        List<Statement> statementList = (List<Statement>) requestBlock.statements();
+                        statementList.remove(requestExpressionStatement);
 
-                    MethodDeclaration actualOnResumeMethodDeclaration = null;
-                    if (!foundOnResume) {
-                        SimpleName onResumeIdentifier = targetAST.newSimpleName("onResume");
-                        Modifier onResumePublicModifier = targetAST.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD);
-                        Block onResumeBody = targetAST.newBlock();
+                        MethodDeclaration actualOnResumeMethodDeclaration = null;
+                        if (!foundOnResume) {
+                            SimpleName onResumeIdentifier = targetAST.newSimpleName("onResume");
+                            Modifier onResumePublicModifier = targetAST.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD);
+                            Block onResumeBody = targetAST.newBlock();
 
-                        proposedOnResumeMethodDeclaration = targetAST.newMethodDeclaration();
-                        proposedOnResumeMethodDeclaration.setName(onResumeIdentifier);
-                        proposedOnResumeMethodDeclaration.modifiers().add(onResumePublicModifier);
-                        proposedOnResumeMethodDeclaration.setBody(onResumeBody);
-                    } else {
-                        actualOnResumeMethodDeclaration = (MethodDeclaration) ASTNode.copySubtree(targetAST, proposedOnResumeMethodDeclaration);
+                            proposedOnResumeMethodDeclaration = targetAST.newMethodDeclaration();
+                            proposedOnResumeMethodDeclaration.setName(onResumeIdentifier);
+                            proposedOnResumeMethodDeclaration.modifiers().add(onResumePublicModifier);
+                            proposedOnResumeMethodDeclaration.setBody(onResumeBody);
+                        } else {
+                            actualOnResumeMethodDeclaration = (MethodDeclaration) ASTNode.copySubtree(targetAST, proposedOnResumeMethodDeclaration);
+                        }
+
+                        // Add at the bottom of the onResume
+                        List<Statement> onResumeStatementList = (List<Statement>) proposedOnResumeMethodDeclaration.getBody().statements();
+                        onResumeStatementList.add(newRequestStatement);
+
+                        if (!foundOnResume) {
+                            String onResumeMethodDeclarationString = proposedOnResumeMethodDeclaration.toString();
+                            proposedCodeToHighlightList.add(onResumeMethodDeclarationString);
+                        } else {
+                            proposedCodeToHighlightList.add(newRequestStatement.toString());
+                        }
+
+                        EarlyResourceBindingProposalMethodBean proposalMethodBean = new EarlyResourceBindingProposalMethodBean();
+                        proposalMethodBean.setSmellMethodBean(smellMethodBean);
+                        proposalMethodBean.setProposedOnCreate(onCreateMethodDeclaration);
+                        proposalMethodBean.setActualOnResume(actualOnResumeMethodDeclaration);
+                        proposalMethodBean.setProposedOnResume(proposedOnResumeMethodDeclaration);
+                        proposalMethodBean.setActualCodeToHighlightList(actualCodeToHighlightList);
+                        proposalMethodBean.setProposedCodeToHighlightList(proposedCodeToHighlightList);
+                        return proposalMethodBean;
                     }
-
-                    // Add at the bottom of the onResume
-                    List<Statement> onResumeStatementList = proposedOnResumeMethodDeclaration.getBody().statements();
-                    onResumeStatementList.add(newRequestStatement);
-
-                    if (!foundOnResume) {
-                        String onResumeMethodDeclarationString = proposedOnResumeMethodDeclaration.toString();
-                        proposedCodeToHighlightList.add(onResumeMethodDeclarationString);
-                    } else {
-                        proposedCodeToHighlightList.add(newRequestStatement.toString());
-                    }
-
-                    EarlyResourceBindingProposalMethodBean proposalMethodBean = new EarlyResourceBindingProposalMethodBean();
-                    proposalMethodBean.setSmellMethodBean(smellMethodBean);
-                    proposalMethodBean.setProposedOnCreate(onCreateMethodDeclaration);
-                    proposalMethodBean.setActualOnResume(actualOnResumeMethodDeclaration);
-                    proposalMethodBean.setProposedOnResume(proposedOnResumeMethodDeclaration);
-                    proposalMethodBean.setActualCodeToHighlightList(actualCodeToHighlightList);
-                    proposalMethodBean.setProposedCodeToHighlightList(proposedCodeToHighlightList);
-                    return proposalMethodBean;
                 }
             }
         }
+        return null;
     }
 }

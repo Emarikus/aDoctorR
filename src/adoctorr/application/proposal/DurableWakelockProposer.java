@@ -18,22 +18,15 @@ public class DurableWakelockProposer {
     }
 
     public DurableWakelockProposalMethodBean computeProposal(DurableWakelockSmellMethodBean smellMethodBean) throws IOException {
-        if (smellMethodBean == null) {
-            System.out.println("Errore precondizione");
-            return null;
-        } else {
+        if (smellMethodBean != null) {
             File sourceFile = smellMethodBean.getSourceFile();
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
             MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
-            if (methodDeclaration == null) {
-                return null;
-            } else {
+            if (methodDeclaration != null) {
                 Statement acquireStatement = smellMethodBean.getAcquireStatement();
-                if (acquireStatement == null) {
-                    return null;
-                } else {
+                if (acquireStatement != null) {
                     AST targetAST = compilationUnit.getAST();
                     MethodInvocation releaseMethodInvocation = targetAST.newMethodInvocation();
 
@@ -51,7 +44,7 @@ public class DurableWakelockProposer {
 
                     // If the scope is the method, then add it to the end of the method
                     Block acquireBlock = ASTUtilities.getBlockFromContent(smellMethodBean.getAcquireBlock().toString(), methodDeclaration);
-                    List<Statement> statementList = acquireBlock.statements();
+                    List<Statement> statementList = (List<Statement>) acquireBlock.statements();
                     statementList.add(releaseExpressionStatement);
 
                     ArrayList<String> proposedCodeToHighlightList = new ArrayList<>();
@@ -65,5 +58,6 @@ public class DurableWakelockProposer {
                 }
             }
         }
+        return null;
     }
 }

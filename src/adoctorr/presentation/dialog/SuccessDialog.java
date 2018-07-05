@@ -4,7 +4,10 @@ import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class SuccessDialog extends JDialog {
     private JPanel contentPane;
@@ -18,7 +21,7 @@ public class SuccessDialog extends JDialog {
         setModal(true);
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
-        int x = (screenSize.width - getWidth()) / 2;
+        int x = (screenSize.width - getWidth()) * 2 / 5;
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         getRootPane().setDefaultButton(buttonAnalyze);

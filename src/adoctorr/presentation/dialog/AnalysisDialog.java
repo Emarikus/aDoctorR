@@ -27,7 +27,6 @@ public class AnalysisDialog extends JDialog {
     private ArrayList<SmellMethodBean> smellMethodList;
 
     private volatile boolean runThread;
-    private volatile boolean analysisStarted;
     private volatile boolean analysisTerminated;
 
     /**
@@ -41,14 +40,13 @@ public class AnalysisDialog extends JDialog {
         setModal(true);
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         Dimension screenSize = toolkit.getScreenSize();
-        int x = (screenSize.width - getWidth()) / 3;
+        int x = (screenSize.width - getWidth()) * 2 / 5;
         int y = (screenSize.height - getHeight()) / 5;
         setLocation(x, y);
         setTitle("aDoctor-R - Analysis");
 
         this.project = project;
         smellMethodList = null;
-        analysisStarted = false;
         analysisTerminated = false;
 
         buttonAbort.addActionListener(new ActionListener() {
@@ -83,8 +81,8 @@ public class AnalysisDialog extends JDialog {
         analysisDialog.runThread = true;
         analysisDialog.analysisThread.start();
 
-        // setVisibile(true) is blocking, that's why we use a Thread to start the real analysis
         analysisDialog.pack();
+        // setVisible(true) is blocking, that's why we use a Thread to start the real analysis
         analysisDialog.setVisible(true);
 
         // Invoked at the end of the analysis thread or when the dialog is closed because a dispose() is executed
@@ -94,28 +92,22 @@ public class AnalysisDialog extends JDialog {
     private void onAbort() {
         // sets this flag to false, in order to stop the analysis thread, as soon as it can
         runThread = false;
-
-        System.out.println("Thread abortito");
+        System.out.println("Analisi abortita");
 
         // Disposing the analysis window unlocks UI thread blocked at the preceding setVisible(true)
         dispose();
     }
 
     private void checkResults() {
-        // Disposing the analysis window unlocks UI thread blocked at the preceding setVisible(true)
-        dispose();
-
-        if (analysisStarted && analysisTerminated) {
-            if (smellMethodList != null) {
-                // If there is at least one smell, show the SmellDialog
-                SmellDialog.show(project, smellMethodList);
-            } else {
-                // There are no smell
-                NoSmellDialog.show(project);
-            }
+        // If the analysis was done correctly
+        if (!analysisTerminated) {
+            AbortDialog.show(project); // It was aborted
         } else {
-            // Aborted
-            AbortDialog.show(project);
+            if (smellMethodList != null) {
+                SmellDialog.show(project, smellMethodList); // If there is at least one smell, show the SmellDialog
+            } else {
+                NoSmellDialog.show(project); // There are no smell
+            }
         }
     }
 
@@ -129,71 +121,69 @@ public class AnalysisDialog extends JDialog {
         }
 
         public void run() {
-            System.out.println("Thread avviato");
+            System.out.println("Analisi avviata");
 
-            analysisDialog.analysisStarted = true;
             startAnalysis();
+
             analysisDialog.analysisTerminated = true;
+            System.out.println("Analisi terminata con successo");
 
             // Disposing the analysis window unlocks UI thread blocked at the preceding setVisible(true)
             analysisDialog.dispose();
+
+            // The thread has terminated its execution
+            analysisDialog.runThread = false;
         }
 
         void startAnalysis() {
             Analyzer analyzer = new Analyzer();
+            // The final results
+            ArrayList<SmellMethodBean> smellMethodList;
             ArrayList<PackageBean> projectPackageList;
             try {
                 // runThread flag is periodically checked to see if the analysis can go on
-                if (analysisDialog.runThread) {
-                    // Very very slow!
-                    projectPackageList = analyzer.buildPackageList(project);
-                    // Post condition check
-                    if (projectPackageList != null && analysisDialog.runThread) {
-                        System.out.println("projectPackageList costruita");
+                if (!analysisDialog.runThread) {
+                    smellMethodList = null;
+                } else {
+                    projectPackageList = analyzer.buildPackageList(project);     // Very very slow!
+                    if (projectPackageList == null || !analysisDialog.runThread) {
+                        smellMethodList = null;
+                    } else {
+                        System.out.println("\tprojectPackageList costruita");
                         ArrayList<File> javaFilesList = analyzer.getAllJavaFiles(project);
-                        // Postcondition check
-                        if (javaFilesList != null && analysisDialog.runThread) {
-                            System.out.println("javaFilesList costruita");
-                            HashMap<String, File> sourceFileMap;
+                        if (javaFilesList == null || !analysisDialog.runThread) {
+                            smellMethodList = null;
+                        } else {
                             try {
-                                sourceFileMap = analyzer.buildSourceFileMap(javaFilesList);
-                                // Postcondition check
-                                if (sourceFileMap != null && analysisDialog.runThread) {
-                                    System.out.println("sourceFileMap costruita");
-                                    ArrayList<SmellMethodBean> smellMethodList = null;
+                                System.out.println("\tjavaFilesList costruita");
+                                HashMap<String, File> sourceFileMap = analyzer.buildSourceFileMap(javaFilesList);
+                                if (sourceFileMap == null || !analysisDialog.runThread) {
+                                    smellMethodList = null;
+                                } else {
                                     try {
+                                        System.out.println("\tsourceFileMap costruita");
                                         smellMethodList = analyzer.analyze(projectPackageList, sourceFileMap);
-                                        // Postocondition check
-                                        if (smellMethodList != null && smellMethodList.size() > 0) {
-                                            System.out.println("smellMethodList costruita");
-                                        } else {
+                                        if (smellMethodList == null || smellMethodList.size() <= 0) {
                                             smellMethodList = null;
-                                            //TODO Error handle 4: smellMethodList ritornata vuota
                                         }
-                                        // Set all the results to the analysisDialog in a callback-like style
-                                        analysisDialog.smellMethodList = smellMethodList;
                                     } catch (IOException e3) {
-                                        //TODO Error handle 4: errore nella costruzione della smellMethodList. E' comunque vuota
+                                        smellMethodList = null;
                                         e3.printStackTrace();
                                     }
-                                } else {
-                                    //TODO Error handle 3: sourceFileMap ritornata vuota
                                 }
                             } catch (IOException e2) {
-                                //TODO Error handle 3: errore nella costruzione della sourceFileMap. E' comunque vuota
+                                smellMethodList = null;
                                 e2.printStackTrace();
                             }
-                        } else {
-                            //TODO Error handle 2: javaFileList ritornata vuota
                         }
-                    } else {
-                        //TODO Error handle 1: packageList ritornata vuota
                     }
                 }
             } catch (IOException e1) {
-                //TODO Error handle 1: errore nella costruzione della packageList. E' comunque vuota
+                smellMethodList = null;
                 e1.printStackTrace();
             }
+            // Set the results to the analysisDialog in a callback-like style
+            analysisDialog.smellMethodList = smellMethodList;
         }
     }
 }

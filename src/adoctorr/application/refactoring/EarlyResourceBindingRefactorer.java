@@ -4,7 +4,6 @@ import adoctorr.application.ast.ASTUtilities;
 import adoctorr.application.bean.proposal.EarlyResourceBindingProposalMethodBean;
 import adoctorr.application.bean.smell.SmellMethodBean;
 import beans.MethodBean;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -30,9 +29,8 @@ public class EarlyResourceBindingRefactorer {
     }
 
     public boolean applyRefactor(EarlyResourceBindingProposalMethodBean proposalMethodBean) throws BadLocationException, IOException {
-        if (proposalMethodBean == null) {
-            return false;
-        } else {
+        boolean result = false;
+        if (proposalMethodBean != null) {
             MethodDeclaration proposedOnCreate = proposalMethodBean.getProposedOnCreate();
             MethodDeclaration actualOnResume = proposalMethodBean.getActualOnResume();
             MethodDeclaration proposedOnResume = proposalMethodBean.getProposedOnResume();
@@ -40,22 +38,19 @@ public class EarlyResourceBindingRefactorer {
             File sourceFile = smellMethodBean.getSourceFile();
             MethodBean methodBean = smellMethodBean.getMethodBean();
 
-            // Builds the Document object
-            String targetSource = FileUtilities.readFile(sourceFile.getAbsolutePath());
-            Document document = new Document(targetSource);
-
             CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
 
             // MethodDeclaration to be replaced
             MethodDeclaration targetOnCreate = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
-            if (targetOnCreate == null) {
-                return false;
-            } else {
+            if (targetOnCreate != null) {
+                // Builds the Document object
+                String targetSource = FileUtilities.readFile(sourceFile.getAbsolutePath());
+                Document document = new Document(targetSource);
+
+                // Refactoring phase
                 AST targetAST = compilationUnit.getAST();
                 ASTRewrite rewriter = ASTRewrite.create(targetAST);
-
-                // Replaces the onCreate(Bundle)
-                rewriter.replace(targetOnCreate, proposedOnCreate, null);
+                rewriter.replace(targetOnCreate, proposedOnCreate, null); // Replaces the onCreate(Bundle)
 
                 if (actualOnResume == null) {
                     // Insert the onResume() after the onCreate(Bundle)
@@ -71,10 +66,9 @@ public class EarlyResourceBindingRefactorer {
                         rewriter.replace(targetOnResume, proposedOnResume, null);
                     }
                 }
+                TextEdit edits = rewriter.rewriteAST(document, JavaCore.getDefaultOptions()); // With JavaCore Options we keep the code format settings, so the \n
 
-                // With JavaCore Options we keep the code format settings, so the \n
-                TextEdit edits = rewriter.rewriteAST(document, JavaCore.getDefaultOptions());
-                //TODO 5: Implementare uno stack di Undo
+                //TODO: Implementare uno stack di Undo
                 // The UndoEdit could be used on the same document to reverse the changes
                 UndoEdit undoEdit = edits.apply(document, TextEdit.CREATE_UNDO | TextEdit.UPDATE_REGIONS);
                 String documentContent = document.get();
@@ -84,8 +78,9 @@ public class EarlyResourceBindingRefactorer {
                 pw.print(documentContent);
                 pw.flush(); // Important
 
-                return true;
+                result = true;
             }
         }
+        return result;
     }
 }

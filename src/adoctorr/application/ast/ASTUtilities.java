@@ -167,9 +167,7 @@ public class ASTUtilities {
     }
 
     public static List<Expression> getArguments(Statement statement) {
-        if (statement == null) {
-            return null;
-        } else {
+        if (statement != null) {
             if (statement instanceof ExpressionStatement) {
                 ExpressionStatement expressionStatement = (ExpressionStatement) statement;
                 Expression expression = expressionStatement.getExpression();
@@ -178,8 +176,8 @@ public class ASTUtilities {
                     return (List<Expression>) methodInvocation.arguments();
                 }
             }
-            return null;
         }
+        return null;
     }
 }
 

@@ -15,10 +15,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -82,12 +79,12 @@ public class SmellDialog extends JDialog {
             String smellName = SmellMethodBean.getSmellName(smellType);
             String htmlContent = "" +
                     "<html>" +
-                        "<p style=\"font-size:10px\">" +
-                            "<b>" + smellName + "</b>" +
-                        "</p>" +
-                        "<p style=\"font-size:9px\">" +
-                        "" + methodName + "" +
-                        "</p>" +
+                    "<p style=\"font-size:10px\">" +
+                    "<b>" + smellName + "</b>" +
+                    "</p>" +
+                    "<p style=\"font-size:9px\">" +
+                    "" + methodName + "" +
+                    "</p>" +
                     "</html>";
             listSmellModel.addElement(htmlContent);
         }
@@ -113,7 +110,7 @@ public class SmellDialog extends JDialog {
             }
         });
 
-        // call onCancel() when cross is clicked
+        // call onQuit() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -137,7 +134,7 @@ public class SmellDialog extends JDialog {
         SmellMethodBean smellMethodBean = unresolvedSmellMethodList.get(selectedIndex);
 
         // Compute the proposal of the selected smell
-        Proposer proposer = new Proposer(project);
+        Proposer proposer = new Proposer();
         try {
             proposalMethodBean = proposer.computeProposal(smellMethodBean);
 
@@ -147,9 +144,8 @@ public class SmellDialog extends JDialog {
             labelSmellName.setText(SmellMethodBean.getSmellName(smellMethodBean.getSmellType()));
             labelClassName.setText(classFullName);
 
-            int smellType = smellMethodBean.getSmellType();
-
             // Smell Description
+            int smellType = smellMethodBean.getSmellType();
             switch (smellType) {
                 case SmellMethodBean.DURABLE_WAKELOCK: {
                     labelIcon.setToolTipText(DURABLE_WAKELOCK_DESCRIPTION);

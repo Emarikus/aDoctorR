@@ -4,7 +4,6 @@ import adoctorr.application.bean.proposal.DurableWakelockProposalMethodBean;
 import adoctorr.application.bean.proposal.EarlyResourceBindingProposalMethodBean;
 import adoctorr.application.bean.proposal.ProposalMethodBean;
 import adoctorr.application.bean.smell.SmellMethodBean;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import org.eclipse.jface.text.BadLocationException;
 
 import java.io.IOException;
@@ -15,13 +14,10 @@ public class Refactorer {
 
     }
 
-    // Applica il refactor e sovrascrive il file
+    // Refactoring and overwrite the file
     public boolean applyRefactoring(ProposalMethodBean proposalMethodBean) throws IOException, BadLocationException {
-        if (proposalMethodBean == null) {
-            System.out.println("Errore precondizione");
-            return false;
-        } else {
-            boolean result = false;
+        boolean result = false;
+        if (proposalMethodBean != null) {
             int smellType = proposalMethodBean.getSmellMethodBean().getSmellType();
             switch (smellType) {
                 case SmellMethodBean.DURABLE_WAKELOCK: {
@@ -39,7 +35,7 @@ public class Refactorer {
                 default:
                     break;
             }
-            return result;
         }
+        return result;
     }
 }

@@ -35,14 +35,14 @@ public class Analyzer {
      */
     public ArrayList<PackageBean> buildPackageList(Project project) throws IOException {
         ArrayList<PackageBean> packageList = null;
-        // Precondition check
         if (project != null) {
             String projectBasePath = project.getBasePath();
             if (projectBasePath != null) {
-                // PackageList to be filled
                 File projectDirectory = new File(project.getBasePath());
+
                 // Calling the aDoctor legacy method to build this list
                 packageList = FolderToJavaProjectConverter.convert(projectDirectory.getAbsolutePath());
+
                 // belongingClass was not set in aDoctor API: this is just a fix
                 for (PackageBean packageBean : packageList) {
                     for (ClassBean classBean : packageBean.getClasses()) {
@@ -64,11 +64,11 @@ public class Analyzer {
      */
     public ArrayList<File> getAllJavaFiles(Project project) {
         ArrayList<File> javaFilesList = null;
-        // Precondition check
         if (project != null) {
             String projectBasePath = project.getBasePath();
             if (projectBasePath != null) {
                 File projectDirectory = new File(project.getBasePath());
+
                 // Invokes the recursive function to get all .java files
                 javaFilesList = getJavaFilesInDirectory(projectDirectory);
             }
@@ -84,7 +84,6 @@ public class Analyzer {
      */
     public HashMap<String, File> buildSourceFileMap(ArrayList<File> javaFilesList) throws IOException {
         HashMap<String, File> sourceFileMap = null;
-        // Precondition check
         if (javaFilesList != null && javaFilesList.size() > 0) {
             sourceFileMap = new HashMap<>();
             for (File javaFile : javaFilesList) {
@@ -114,38 +113,40 @@ public class Analyzer {
      * @return
      */
     public ArrayList<SmellMethodBean> analyze(ArrayList<PackageBean> packageList, HashMap<String, File> sourceFileMap) throws IOException {
-        ArrayList<SmellMethodBean> smellMethodList = new ArrayList<>();
+        ArrayList<SmellMethodBean> smellMethodList = null;
+        if (packageList != null && sourceFileMap != null) {
+            ArrayList<DurableWakelockSmellMethodBean> durableWakelockList = new ArrayList<>();
+            ArrayList<EarlyResourceBindingSmellMethodBean> earlyResourceBindingList = new ArrayList<>();
 
-        ArrayList<DurableWakelockSmellMethodBean> durableWakelockList = new ArrayList<>();
-        ArrayList<EarlyResourceBindingSmellMethodBean> earlyResourceBindingList = new ArrayList<>();
+            DurableWakelockAnalyzer durableWakelockAnalyzer = new DurableWakelockAnalyzer();
+            EarlyResourceBindingAnalyzer earlyResourceBindingAnalyzer = new EarlyResourceBindingAnalyzer();
 
-        DurableWakelockAnalyzer durableWakelockAnalyzer = new DurableWakelockAnalyzer();
-        EarlyResourceBindingAnalyzer earlyResourceBindingAnalyzer = new EarlyResourceBindingAnalyzer();
+            for (PackageBean packageBean : packageList) {
+                for (ClassBean classBean : packageBean.getClasses()) {
+                    String className = classBean.getName();
+                    String packageName = packageBean.getName();
+                    String classFullName = packageName + "." + className;
+                    File sourceFile = sourceFileMap.get(classFullName);
 
-        for (PackageBean packageBean : packageList) {
-            for (ClassBean classBean : packageBean.getClasses()) {
-                String className = classBean.getName();
-                String packageName = packageBean.getName();
-                String classFullName = packageName + "." + className;
-                File sourceFile = sourceFileMap.get(classFullName);
+                    CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
+                    for (MethodBean methodBean : classBean.getMethods()) {
+                        MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
 
-                CompilationUnit compilationUnit = ASTUtilities.getCompilationUnit(sourceFile);
-                for (MethodBean methodBean : classBean.getMethods()) {
-                    MethodDeclaration methodDeclaration = ASTUtilities.getMethodDeclarationFromContent(methodBean.getTextContent(), compilationUnit);
-
-                    DurableWakelockSmellMethodBean durableWakelockSmellMethodBean = durableWakelockAnalyzer.analyzeMethod(methodBean, methodDeclaration, compilationUnit, sourceFile);
-                    if (durableWakelockSmellMethodBean != null) {
-                        durableWakelockList.add(durableWakelockSmellMethodBean);
-                    }
-                    EarlyResourceBindingSmellMethodBean earlyResourceBindingSmellMethodBean = earlyResourceBindingAnalyzer.analyzeMethod(methodBean, methodDeclaration, compilationUnit, sourceFile);
-                    if (earlyResourceBindingSmellMethodBean != null) {
-                        earlyResourceBindingList.add(earlyResourceBindingSmellMethodBean);
+                        DurableWakelockSmellMethodBean durableWakelockSmellMethodBean = durableWakelockAnalyzer.analyzeMethod(methodBean, methodDeclaration, compilationUnit, sourceFile);
+                        if (durableWakelockSmellMethodBean != null) {
+                            durableWakelockList.add(durableWakelockSmellMethodBean);
+                        }
+                        EarlyResourceBindingSmellMethodBean earlyResourceBindingSmellMethodBean = earlyResourceBindingAnalyzer.analyzeMethod(methodBean, methodDeclaration, compilationUnit, sourceFile);
+                        if (earlyResourceBindingSmellMethodBean != null) {
+                            earlyResourceBindingList.add(earlyResourceBindingSmellMethodBean);
+                        }
                     }
                 }
             }
+            smellMethodList = new ArrayList<>();
+            smellMethodList.addAll(durableWakelockList);
+            smellMethodList.addAll(earlyResourceBindingList);
         }
-        smellMethodList.addAll(durableWakelockList);
-        smellMethodList.addAll(earlyResourceBindingList);
         return smellMethodList;
     }
 

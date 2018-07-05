@@ -15,17 +15,10 @@ public class DurableWakelockAnalyzer {
     private static final String ACQUIRE_NAME = "acquire";
     private static final String RELEASE_NAME = "release";
     private static final String WAKELOCK_CLASS = "PowerManager.WakeLock";
-    private static final String ACQUIRE_ARGUMENT_TYPE = "int";
 
     // Warning: Source code with method-level compile error and accents might give problems in the methodDeclaration fetch
     public DurableWakelockSmellMethodBean analyzeMethod(MethodBean methodBean, MethodDeclaration methodDeclaration, CompilationUnit compilationUnit, File sourceFile) {
-        if (methodBean == null) {
-            return null;
-        } else if (methodDeclaration == null) {
-            return null;
-        } else if (sourceFile == null) {
-            return null;
-        } else {
+        if (methodBean != null && methodDeclaration != null && compilationUnit != null && sourceFile != null) {
             boolean smellFound = false;
 
             Block acquireBlock = null;
@@ -36,7 +29,7 @@ public class DurableWakelockAnalyzer {
             int k = 0;
             while (!smellFound && k < methodBlockList.size()) {
                 Block block = methodBlockList.get(k);
-                List<Statement> statementList = block.statements();
+                List<Statement> statementList = (List<Statement>) block.statements();
                 k++; // In case of next iteration
 
                 int i = 0;
@@ -85,9 +78,8 @@ public class DurableWakelockAnalyzer {
                 smellMethodBean.setAcquireBlock(acquireBlock);
                 smellMethodBean.setAcquireStatement(acquireStatement);
                 return smellMethodBean;
-            } else {
-                return null;
             }
         }
+        return null;
     }
 }
