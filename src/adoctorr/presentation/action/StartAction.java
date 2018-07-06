@@ -15,7 +15,7 @@ import java.io.File;
 public class StartAction extends AnAction {
 
     /**
-     * Called when aDoctor is clicked in Analyze menu of the IDE
+     * Called when aDoctor is clicked in Refactor menu of the IDE
      * @param e
      */
     @Override

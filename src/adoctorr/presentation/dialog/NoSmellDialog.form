@@ -53,7 +53,7 @@
             </constraints>
             <properties>
               <font size="16"/>
-              <text value="Congratulations: there are no smells!"/>
+              <text value="aDoctor was not able to find any smell"/>
             </properties>
           </component>
           <component id="9f77d" class="javax.swing.JLabel">
@@ -62,7 +62,7 @@
             </constraints>
             <properties>
               <font size="14"/>
-              <text value="aDoctor is not able to do anything. Have a nice day!"/>
+              <text value="There is nothing to do here. Have a nice day!"/>
             </properties>
           </component>
         </children>

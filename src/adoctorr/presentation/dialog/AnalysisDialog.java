@@ -26,8 +26,8 @@ public class AnalysisDialog extends JDialog {
     private Project project;
     private ArrayList<SmellMethodBean> smellMethodList;
 
-    private volatile boolean runThread;
-    private volatile boolean analysisTerminated;
+    private volatile boolean analysisAborted;
+    private volatile boolean smellFound;
 
     /**
      * Default constructor and initializator of the dialog
@@ -47,7 +47,8 @@ public class AnalysisDialog extends JDialog {
 
         this.project = project;
         smellMethodList = null;
-        analysisTerminated = false;
+        analysisAborted = false;
+        smellFound = false;
 
         buttonAbort.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -78,7 +79,6 @@ public class AnalysisDialog extends JDialog {
 
         // Thread that manage the real analysis
         analysisDialog.analysisThread = new AnalysisThread(project, analysisDialog);
-        analysisDialog.runThread = true;
         analysisDialog.analysisThread.start();
 
         analysisDialog.pack();
@@ -91,7 +91,7 @@ public class AnalysisDialog extends JDialog {
 
     private void onAbort() {
         // sets this flag to false, in order to stop the analysis thread, as soon as it can
-        runThread = false;
+        analysisAborted = true;
         System.out.println("Analisi abortita");
 
         // Disposing the analysis window unlocks UI thread blocked at the preceding setVisible(true)
@@ -99,15 +99,12 @@ public class AnalysisDialog extends JDialog {
     }
 
     private void checkResults() {
-        // If the analysis was done correctly
-        if (!analysisTerminated) {
+        if (analysisAborted) {
             AbortDialog.show(project); // It was aborted
+        } else if (smellFound) {
+            SmellDialog.show(project, smellMethodList); // If there is at least one smell, show the SmellDialog
         } else {
-            if (smellMethodList != null) {
-                SmellDialog.show(project, smellMethodList); // If there is at least one smell, show the SmellDialog
-            } else {
-                NoSmellDialog.show(project); // There are no smell
-            }
+            NoSmellDialog.show(project); // There are no smell
         }
     }
 
@@ -127,43 +124,30 @@ public class AnalysisDialog extends JDialog {
 
             // Disposing the analysis window unlocks UI thread blocked at the preceding setVisible(true)
             analysisDialog.dispose();
-
-            // The thread has terminated its execution
-            analysisDialog.runThread = false;
         }
 
         void startAnalysis() {
             Analyzer analyzer = new Analyzer();
             // The final results
-            ArrayList<SmellMethodBean> smellMethodList;
+            ArrayList<SmellMethodBean> smellMethodList = null;
             ArrayList<PackageBean> projectPackageList;
             try {
                 // runThread flag is periodically checked to see if the analysis can go on
-                if (!analysisDialog.runThread) {
-                    smellMethodList = null;
-                } else {
+                if (!analysisDialog.analysisAborted) {
                     projectPackageList = analyzer.buildPackageList(project);     // Very very slow!
-                    if (projectPackageList == null || !analysisDialog.runThread) {
-                        smellMethodList = null;
-                    } else {
+                    if (projectPackageList != null && !analysisDialog.analysisAborted) {
                         System.out.println("\tprojectPackageList costruita");
                         ArrayList<File> javaFilesList = analyzer.getAllJavaFiles(project);
-                        if (javaFilesList == null || !analysisDialog.runThread) {
-                            smellMethodList = null;
-                        } else {
+                        if (javaFilesList != null && !analysisDialog.analysisAborted) {
                             try {
                                 System.out.println("\tjavaFilesList costruita");
                                 HashMap<String, File> sourceFileMap = analyzer.buildSourceFileMap(javaFilesList);
-                                if (sourceFileMap == null || !analysisDialog.runThread) {
-                                    smellMethodList = null;
-                                } else {
+                                if (sourceFileMap != null && !analysisDialog.analysisAborted) {
                                     try {
                                         System.out.println("\tsourceFileMap costruita");
                                         smellMethodList = analyzer.analyze(projectPackageList, sourceFileMap);
-                                        if (smellMethodList == null || smellMethodList.size() <= 0) {
-                                            smellMethodList = null;
-                                        } else {
-                                            analysisDialog.analysisTerminated = true;
+                                        if (smellMethodList != null && smellMethodList.size() > 0 && !analysisDialog.analysisAborted) {
+                                            analysisDialog.smellFound = true;
                                             System.out.println("Analisi terminata con successo");
                                         }
                                     } catch (IOException e3) {
